@@ -1,5 +1,7 @@
 from .LaserManager import LaserManager
 
+import time                                                                                     # --> remove later
+
 class OmicronQuixXLaserManager(LaserManager):
     """ LaserManager for controlling Omicron lasers of xX-series (especially QuixX)
 
@@ -13,32 +15,61 @@ class OmicronQuixXLaserManager(LaserManager):
         ]
         super().__init__(laserInfo, name, isBinary=False, valueUnits='mW', valueDecimals=0, isModulated = True)
 
+        time.sleep(2)                 # for testing with Arduino device (otherwise timeout error)  # --> remove later
+        
         self.getFirmware() 
         self.deactAdHocMode()
+        self.setOperatingMode()
 
     def getFirmware(self):
         """ Gets firmware and sets delimiter to '|', 
             calling '?GFw' uses default delimiter '§', which is not compatible for RS232Manager?,
             after a reset delimiter changes back to default """
         cmd = '?GFw|'
-        self._rs232manager.query(cmd)
+        reply = self._rs232manager.query(cmd)
+        print(reply)                                                                                # --> remove later
+        return reply
 
     def getOperatingMode(self):
         """ Returns the selected frequency of the laser. """
         cmd = '?GOM'
         reply = self._rs232manager.query(cmd)
+        print(reply)                                                                                # --> remove later
         return reply
-       
-    def setOperatingMode(self):
-        """ Sets operating mode (see table) by using a 16bit-chain as Hex-Code """
-        cmd = '?SOM8018'                # example
-        self._rs232manager.query(cmd)
+
+    def setOperatingMode(self, selectMode: str = "a"):                            # uses "a" as default mode (at the moment)
+        """ Sets operating mode (see table) by using a 16bit-chain as Hex-Code,
+            starting with Bit 15 and ending with Bit 0,
+            example: 1000 0000 0001 1000 -->in hex: 8018,
+            AutoPowerUp enabled, AutoStartUp disabled, USB Ad-hoc disabeld etc... """
+        hexa = self.getOperatingMode()
+        print("new mode:", selectMode)                                                          # --> remove later
+        print(hexa)                                                                             # --> remove later
+        if hexa[:4] == "!GOM":                  # verifies correct answer commamnd from laser
+            if selectMode == "a":
+                hexaMod = self.modifyHex(hexa[4:], 2, '0')     # Hex, Index (0 - 15), Bit (0 or 1) as string
+            elif selectMode == "b":
+                hexaMod = self.modifyHex(hexa[4:], 2, '1')
+            elif selectMode == "c":
+                hexaMod = self.modifyHex(hexa[4:], 3, '0')
+        else:
+            print("Error while checking operating mode")                    # --> remove later or change to an error logger
+            return
+        cmd = '?SOM' + hexaMod
+        reply = self._rs232manager.query(cmd)
+        print(cmd)                                                                              # --> remove later
+        print(reply)                                                                            # --> remove later
+        return reply
         
     def deactAdHocMode(self):  
         """ Disables USB-AdHoc-Mode which causes problems in the communicaton order
             AdHoc Mode is disabled by setting Bit14 to '0' (see table in manual) """
-        cmd = '?SOM8018'
-        self._rs232manager.query(cmd)
+        hexa = self.getOperatingMode()
+        hexaMod = self.modifyHex(hexa[4:], 2, '0')      # Hexadecimal, Index:2 is Bit14, Bit (0 or 1) as string
+        cmd = '?SOM' + hexaMod
+        reply = self._rs232manager.query(cmd)
+        print(reply)                                                                            # --> remove later
+        return reply
 
     def setEnabled(self, enabled):
         """ Turn on (n) or off (f) laser emission """
@@ -47,38 +78,55 @@ class OmicronQuixXLaserManager(LaserManager):
         else:
             value = "f"
         cmd = '?LO' + value
-        self._rs232manager.query(cmd)
+        reply = self._rs232manager.query(cmd)
+        print(reply)                                                                            # --> remove later
 
     def setValue(self, power):    # (setPowerPercent)
         """ Handles output power.
             Sends a RS232 command to the laser specifying the new intensity. """
         value = round(power)         # assuming input value is [0,1023]
         cmd = '?SPP' + str(value)
-        self._rs232manager.query(cmd)
+        reply = self._rs232manager.query(cmd)
+        print(reply)                                                                            # --> remove later
     
     def getPowerPercent(self):
         """ Get power in percent """
         cmd = '?GPP'
         reply = self._rs232manager.query(cmd)
-        return reply
+        print(reply)                                                                            # --> remove later
 
     def getMaxPower(self):
         """ Returns the maximum power of the laser. """
         cmd = '?GMP'
         reply = self._rs232manager.query(cmd)
+        print(reply)                                                                            # --> remove later
         return reply
     
     def measureTempDiode(self):
         """ Returns the temperature of the diode (<40°C!). """
         cmd = '?MTD'
         reply = self._rs232manager.query(cmd)
+        print(reply)                                                                            # --> remove later
         return reply
     
     def measureTempAmbient(self):
         """ Returns the ambient temperature of the laser. """
         cmd = '?MTA'
         reply = self._rs232manager.query(cmd)
+        print(reply)                                                                            # --> remove later
         return reply
+    
+    def checkBoxOption(self):
+        print("Checkbox clicked")                                                               # --> remove later
+       
+       
+    def modifyHex(self, hexa: str, index: int, bit: str):
+        """ modifies a single bit of a 4 letter hexadecimal string (16bits) 
+            at specified index position """
+        binary = bin(int(hexa, 16))[2:].zfill(16)
+        binary = binary[:index] + bit + binary[index+1:]
+        hexaMod = hex(int(binary, 2))[2:].zfill(4).upper()
+        return hexaMod
     
 
 # Copyright (C) 2020-2021 ImSwitch developers
