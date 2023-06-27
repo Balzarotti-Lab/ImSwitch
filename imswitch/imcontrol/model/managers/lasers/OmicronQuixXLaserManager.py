@@ -1,6 +1,6 @@
 from .LaserManager import LaserManager
 
-import time                                                                                     # --> remove later
+# import time                                                                                     # --> remove later
 
 class OmicronQuixXLaserManager(LaserManager):
     """ LaserManager for controlling Omicron lasers of xX-series (especially QuixX)
@@ -15,11 +15,12 @@ class OmicronQuixXLaserManager(LaserManager):
         ]
         super().__init__(laserInfo, name, isBinary=False, valueUnits='mW', valueDecimals=0, isModulated = True)
 
-        time.sleep(2)                 # for testing with Arduino device (otherwise timeout error)  # --> remove later
+        # time.sleep(2)                 # for testing with Arduino device (otherwise timeout error)  # --> remove later
         
         self.getFirmware() 
-        self.deactAdHocMode()
-        self.setOperatingMode()
+        self.deactAdHocModeSimple()    # Compatible with Mocker  
+        # self.deactAdHocMode()
+        # self.setOperatingMode()
 
     def getFirmware(self):
         """ Gets firmware and sets delimiter to '|', 
@@ -70,6 +71,11 @@ class OmicronQuixXLaserManager(LaserManager):
         reply = self._rs232manager.query(cmd)
         print(reply)                                                                            # --> remove later
         return reply
+    
+    def deactAdHocModeSimple(self):         
+        """ Disables USB-AdHoc-Mode which causes problems in the communicaton order
+            AdHoc Mode is disabled by setting Bit14 to '0' (see table in manual) """
+        self._rs232manager.query('?SOM8018')
 
     def setEnabled(self, enabled):
         """ Turn on (n) or off (f) laser emission """
