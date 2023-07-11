@@ -1,6 +1,5 @@
 from .LaserManager import LaserManager
 
-# import time                                                                                     # --> remove later
 
 class CoboltDPSS_RS232LaserManager(LaserManager):
     """ LaserManager for controlling Cobolt lasers (DPSS Series)
@@ -14,8 +13,6 @@ class CoboltDPSS_RS232LaserManager(LaserManager):
             laserInfo.managerProperties['rs232device']
         ]
         super().__init__(laserInfo, name, isBinary=False, valueUnits='mW', valueDecimals=0, isModulated = True)
-
-        # time.sleep(2)                 # for testing with Arduino device (otherwise timeout error)  # --> remove later
         
         self.getFirmware() 
         self.deactAutoStart()
@@ -88,9 +85,6 @@ class CoboltDPSS_RS232LaserManager(LaserManager):
         """ Read measured output power """
         cmd = 'pa?'
         return self._rs232manager.query(cmd)
-
-    def checkBoxOption(self):
-        print("Checkbox clicked")                                                               # --> remove later
        
 
 # Copyright (C) 2020-2021 ImSwitch developers

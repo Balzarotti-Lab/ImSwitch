@@ -18,7 +18,7 @@ class LaserExtendedController(ImConWidgetController):
         # Set up lasers
         for lName, lManager in self._master.lasersManager:
             self._widget.addLaser(
-                lName, lManager.valueUnits, lManager.valueDecimals, lManager.wavelength,
+                lName, lManager.valueUnits, lManager.valueDecimals, lManager.wavelength, lManager.modulation, lManager.opMode,                      # myAdd
                 (lManager.valueRangeMin, lManager.valueRangeMax) if not lManager.isBinary else None,
                 lManager.valueRangeStep if lManager.valueRangeStep is not None else None,
                 (lManager.freqRangeMin, lManager.freqRangeMax, lManager.freqRangeInit) if lManager.isModulated else (0, 0, 0)
@@ -58,8 +58,10 @@ class LaserExtendedController(ImConWidgetController):
         self._widget.sigPresetScanDefaultToggled.connect(self.presetScanDefaultToggled)
 
 # myAdd
-        self._widget.sigOpModeSelected.connect(self.toggleOpMode)
-        self._widget.sigCheckBoxClicked.connect(self.toggleOption)
+        # self._widget.sigOpModeSelected.connect(self.toggleOpMode)
+        self._widget.sigRadioButtonToggled.connect(self.toggleOpMode)
+        self._widget.sigAnalogClicked.connect(self.toggleAnalog)
+        self._widget.sigDigitalClicked.connect(self.toggleDigital)
 # --------------------------------------------------
 
     def closeEvent(self):
@@ -74,13 +76,30 @@ class LaserExtendedController(ImConWidgetController):
 # myAdd
     def toggleOpMode(self, laserName, selectMode):
         """ Toggle operating mode."""
-        self._master.lasersManager[laserName].setOperatingMode(selectMode)
+        reply = self._master.lasersManager[laserName].setOperatingMode(selectMode)
+        print(reply)
+        # self._widget.toggleSome(laserName, reply)
         self.setSharedAttr(laserName, _opMode, selectMode)                  #????? important?
 
-    def toggleOption(self, laserName, enabled):
+    def toggleOpModeOld(self, laserName, selectMode):
+        """ Toggle operating mode."""
+        reply = self._master.lasersManager[laserName].setOperatingMode(selectMode)
+        print(reply)
+        self._widget.toggleSome(laserName, reply)
+        self.setSharedAttr(laserName, _opMode, selectMode)                  #????? important?
+
+    def toggleAnalog(self, laserName, enabled):
         """ Toggle Checkbox."""
-        self._master.lasersManager[laserName].checkBoxOption()
-        self.setSharedAttr(laserName, _optionAttr, enabled)                      #????? important?
+        self._master.lasersManager[laserName].setAnalogModulation(enabled)
+        # if "exclusive" in self._master.lasersManager[laserName].modulation:               # moeglichkeit zur kommunikation zu Widget
+        #     self._widget.irgendeineFunktionimWidget(False)
+        # else: print("no exclusive")
+        self.setSharedAttr(laserName, _analogAttr, enabled)                      #????? important?
+
+    def toggleDigital(self, laserName, enabled):
+        """ Toggle Checkbox."""
+        self._master.lasersManager[laserName].setDigitalModulation(enabled)
+        self.setSharedAttr(laserName, _digitalAttr, enabled)                      #????? important?
 # ------------------------------------------
 
     def valueChanged(self, laserName, magnitude):
@@ -144,6 +163,9 @@ class LaserExtendedController(ImConWidgetController):
 
         # Set in setup info
         self._setupInfo.setLaserPreset(name, self.makePreset())
+# # myAdd                                                                         for saving other values
+#         self._setupInfo.setLaserPreset(name, self.makePreset2())
+# # -----------------------------------------------------------------------------
         configfiletools.saveSetupInfo(configfiletools.loadOptions()[0], self._setupInfo)
 
         # Update selected preset in GUI
@@ -216,10 +238,22 @@ class LaserExtendedController(ImConWidgetController):
         return {lName: guitools.LaserPresetInfo(value=self._widget.getValue(lName))
                 for lName, lManager in self._master.lasersManager if not lManager.isBinary}
 
+# # myAdd                                                                         for saving other values
+#     def makePreset2(self):
+#         """ Returns a preset object corresponding to the current laser values.
+#         """
+#         return {lName: guitools.LaserPresetInfo(value=self._widget.getValue(lName))
+#                 for lName, lManager in self._master.lasersManager if not lManager.isBinary}
+# # -----------------------------------------------------------
     def applyPreset(self, laserPreset):
         """ Loads a preset object into the current values. """
         for laserName, laserPresetInfo in laserPreset.items():
             self.setLaserValue(laserName, laserPresetInfo.value)
+
+# # myAdd                                                                         for saving other values           
+#         for laserName, laserPresetInfo in laserPreset.items():
+#             self.setLaserValue(laserName, laserPresetInfo.value)
+# # -----------------------------------------
 
     def scanChanged(self, isScanning):
         """ Handles what happens when a scan is started/stopped. """
@@ -315,7 +349,8 @@ _dcAttr = "DutyCycle"
 
 # myAdd                                                                 # ???????????????????///
 _opMode = 'SelectedMode'
-_optionAttr ='CheckboxOption'
+_analogAttr = 'AnalogMod'
+_digitalAttr = 'DigitalMod'
 # -------------------------------------
 
 

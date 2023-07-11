@@ -1,10 +1,8 @@
 from .LaserManager import LaserManager
 
-import time                                                                                     # --> remove later
-
 class Toptica_iBeam_RS232LaserManager(LaserManager):
     """ LaserManager for controlling Toptica iBeamSmart Lasers
-
+    
     Manager properties:
     - ``rs232device`` -- name of the defined rs232 communication channel
     through which the communication should take place """
@@ -13,13 +11,13 @@ class Toptica_iBeam_RS232LaserManager(LaserManager):
         self._rs232manager = lowLevelManagers['rs232sManager'][
             laserInfo.managerProperties['rs232device']
         ]
+       
         super().__init__(laserInfo, name, isBinary=False, valueUnits='mW', valueDecimals=0, isModulated = True)
 
-        time.sleep(2)                 # for testing with Arduino device (otherwise timeout error)  # --> remove later
         
         self.getFirmware() 
         self.enableChannel2()
-        # self.setOperatingMode()
+       
 
     def getFirmware(self):
         """ Gets firmware and sets delimiter to '|', 
@@ -31,25 +29,26 @@ class Toptica_iBeam_RS232LaserManager(LaserManager):
         return reply
 
     def getOperatingMode(self):
-        """ Returns the selected frequency of the laser. """
+        """ Returns the. """
         cmd = ''
         return self._rs232manager.query(cmd)
 
-    def setOperatingMode(self, selectMode: str = "a"):                            # uses "a" as default mode (at the moment)
-        """ Sets potential operating mode """                                                                       # --> remove later
+    # def setOperatingMode(self, selectMode: str = "a"):                            # uses "a" as default mode (at the moment)
+    #     """ Sets potential operating mode """                                                                       # --> remove later
 
-        if selectMode == "a":
-            cmd = 'a'     
-        elif selectMode == "b":
-            cmd = 'b'
-        elif selectMode == "c":
-            cmd = 'c'
-        else: cmd = ''
+    #     if selectMode == "a":
+    #         cmd = 'a'     
+    #     elif selectMode == "b":
+    #         cmd = 'b'
+    #     elif selectMode == "c":
+    #         cmd = 'c'
+    #     else: cmd = ''
 
-        reply = self._rs232manager.query(cmd)
-        print(cmd)                                                                              # --> remove later
-        print(reply)                                                                            # --> remove later
-        return reply
+    #     reply = self._rs232manager.query(cmd)
+    #     reply = 'neuer Wert'
+    #     print(cmd)                                                                              # --> remove later
+    #     print(reply)                                                                            # --> remove later
+    #     return reply
         
     def enableChannel2(self):  
         """ Enables Channel 2 """
@@ -97,11 +96,7 @@ class Toptica_iBeam_RS232LaserManager(LaserManager):
             value = 'di'
         cmd = value + ' ext' 
         reply = self._rs232manager.query(cmd)
-        print(reply)     
-    
-    def checkBoxOption(self):
-        print("Checkbox clicked")                                                               # --> remove later
-         
+        print(reply)           
 
 # Copyright (C) 2020-2021 ImSwitch developers
 # This file is part of ImSwitch.

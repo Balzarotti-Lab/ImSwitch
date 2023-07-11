@@ -31,6 +31,11 @@ class LaserManager(ABC):
         self.__valueUnits = valueUnits
         self.__valueDecimals = valueDecimals
         self.__isModulated = isModulated
+
+# myAdd 
+        self.__modulation = laserInfo.modulation
+        self.__opMode = laserInfo.opMode
+# ---------------------------------------
         if isModulated:
             self.__freqRangeMin = laserInfo.freqRangeMin
             self.__freqRangeMax = laserInfo.freqRangeMax
@@ -40,6 +45,17 @@ class LaserManager(ABC):
             self.__freqRangeMax = None
             self.__freqRangeInit = None
 
+# myAdd
+    @property
+    def modulation(self) -> str:
+        """ Options for external modultion, defined in the laser's setup info. """
+        return self.__modulation
+    
+    @property
+    def opMode(self) -> str:
+        """ possible operating modes, defined in the laser's setup info. """
+        return self.__opMode
+# ---------------------------------------
     @property
     def name(self) -> str:
         """ Unique laser name, defined in the laser's setup info. """

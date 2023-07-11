@@ -24,7 +24,9 @@ class LaserExtendedWidget(Widget):
 
 # myAdd
     sigOpModeSelected = QtCore.Signal(str, str)
-    sigCheckBoxClicked = QtCore.Signal(str, bool)
+    sigRadioButtonToggled = QtCore.Signal(str, str)
+    sigAnalogClicked = QtCore.Signal(str, bool)
+    sigDigitalClicked = QtCore.Signal(str, bool)
 #--------------------------------------------
 
     def __init__(self, *args, **kwargs):
@@ -88,7 +90,7 @@ class LaserExtendedWidget(Widget):
 
         self.layout.addLayout(self.presetsBox, 1, 0)
              
-    def addLaser(self, laserName, valueUnits, valueDecimals, wavelength, valueRange=None,
+    def addLaser(self, laserName, valueUnits, valueDecimals, wavelength, modulation, opMode, valueRange=None,                # myAdd
                  valueRangeStep=1, frequencyRange=(0, 0, 0)):
         """ Adds a laser module widget. valueRange is either a tuple
         (min, max), or None (if the laser can only be turned on/off).
@@ -97,7 +99,7 @@ class LaserExtendedWidget(Widget):
 
         control = LaserModule(
             valueUnits=valueUnits, valueDecimals=valueDecimals, valueRange=valueRange,
-            tickInterval=5, singleStep=valueRangeStep,
+            tickInterval=5, singleStep=valueRangeStep, modulation=modulation, opMode=opMode,                                 # myAdd
             initialPower=valueRange[0] if valueRange is not None else 0,
             frequencyRange=frequencyRange
         )
@@ -112,8 +114,14 @@ class LaserExtendedWidget(Widget):
         control.sigOpModeSelected.connect(
             lambda selection: self.sigOpModeSelected.emit(laserName, selection)
         )
-        control.sigCheckBoxClicked.connect(
-            lambda enabled: self.sigCheckBoxClicked.emit(laserName, enabled)
+        control.sigRadioButtonToggled.connect(
+            lambda radio: self.sigRadioButtonToggled.emit(laserName, radio)
+        )
+        control.sigAnalogClicked.connect(
+            lambda enabled: self.sigAnalogClicked.emit(laserName, enabled)
+        )
+        control.sigDigitalClicked.connect(
+            lambda enabled: self.sigDigitalClicked.emit(laserName, enabled)
         )
 # -----------------------------------------------------
         if all(num > 0 for num in frequencyRange):
@@ -238,6 +246,9 @@ class LaserExtendedWidget(Widget):
             self.setMinimumWidth(width)
 
         return False
+    
+    def toggleSome(self, laserName, test):
+        self.laserModules[laserName].toggleSome(test)
 
 
 class LaserModule(QtWidgets.QWidget):
@@ -252,11 +263,13 @@ class LaserModule(QtWidgets.QWidget):
 
 # myAdd
     sigOpModeSelected = QtCore.Signal(str)
-    sigCheckBoxClicked = QtCore.Signal(bool)
+    sigRadioButtonToggled = QtCore.Signal(str)
+    sigAnalogClicked = QtCore.Signal(bool)
+    sigDigitalClicked = QtCore.Signal(bool)
 #--------------------------------------------
 
     def __init__(self, valueUnits, valueDecimals, valueRange, tickInterval, singleStep,
-                 initialPower, frequencyRange, *args, **kwargs):
+                 initialPower, frequencyRange, modulation, opMode, *args, **kwargs):                               # myAdd
         super().__init__(*args, **kwargs)
         self.valueDecimals = valueDecimals
 
@@ -294,21 +307,53 @@ class LaserModule(QtWidgets.QWidget):
 # myAdd
         self.opModeLabel = QtWidgets.QLabel('Operating Mode:')
         self.opModeList = QtWidgets.QComboBox()
-        self.opModeList.addItems(["a","b","c"])
-        self.opModeList.setCurrentIndex(0)                                # selects 1st item
-        self.opModeList.currentIndexChanged.connect(
-            lambda i: self.sigOpModeSelected.emit(self.opModeList.itemText(i))    # connect selection
+        if not opMode == "no operating mode":
+            self.opModeList.addItems(opMode)
+            self.opModeList.setCurrentIndex(0)                                # selects 1st item
+            self.opModeList.currentIndexChanged.connect(
+                lambda i: self.sigOpModeSelected.emit(self.opModeList.itemText(i))    # connect selection
         )
-        # self.opModeList.activated.connect(
-        #     lambda i: self.sigOpModeSelected.emit(self.opModeList.itemText(i))    # for selecting the same item (leads to double commands)
-        # )
 
-        self.radioA = QtWidgets.QRadioButton('A')
+        self.checkAnalog = QtWidgets.QCheckBox('Analog modulation')
+        self.checkDigital = QtWidgets.QCheckBox('Digital modulation')
+
+        if "analog" in modulation:
+            self.checkAnalog.setCheckable(True)
+        else:
+            self.checkAnalog.setChecked(True) 
+            self.checkAnalog.setEnabled(False)
+        self.checkAnalog.toggled.connect(self.sigAnalogClicked)
+        
+        if "digital" in modulation:
+            self.checkDigital.setCheckable(True)
+        else: 
+            self.checkAnalog.setChecked(True) 
+            self.checkDigital.setEnabled(False)
+        self.checkDigital.toggled.connect(self.sigDigitalClicked)
+        
+        # if "exclusive" in modulation:
+        #     self.checkAnalog.clicked.connect(lambda:self.checkDigital.setChecked(False))
+        #     self.checkDigital.clicked.connect(lambda:self.checkAnalog.setChecked(False))
+        
+        if "APC (analog only)" in opMode:                                                              # feature just for Oxxius Laser
+            self.checkDigital.setEnabled(False)
+
+        # if not opMode == "no operating mode":
+        self.radioA = QtWidgets.QRadioButton(opMode[0])
         self.radioA.setChecked(True)
-        self.radioB = QtWidgets.QRadioButton('B')
-        self.showCheck = QtWidgets.QCheckBox('Checkbox')
-        self.showCheck.setCheckable(True)
-        self.showCheck.toggled.connect(self.sigCheckBoxClicked) 
+        self.radioB = QtWidgets.QRadioButton(opMode[1])
+        self.radioA.clicked.connect(
+            lambda: self.sigRadioButtonToggled.emit(self.radioA.text()))
+        self.radioB.clicked.connect(
+            lambda: self.sigRadioButtonToggled.emit(self.radioB.text()))
+        
+        if "APC (analog only)" in opMode:                                                               # feature just for Oxxius Laser
+            self.radioA.clicked.connect(lambda: self.checkDigital.setEnabled(False))
+            self.radioA.clicked.connect(lambda: self.checkDigital.setChecked(False))
+            self.radioB.clicked.connect(lambda: self.checkDigital.setEnabled(True))
+        if "no operating mode" in opMode:
+            self.radioA.setEnabled(False)
+            self.radioB.setEnabled(False)
 #--------------------------------------------------------
 
         powerFrame = QtWidgets.QFrame(self)
@@ -323,11 +368,13 @@ class LaserModule(QtWidgets.QWidget):
         self.powerGrid.addWidget(self.maxpower, 0, 4, 2, 1)
 
 # myAdd                                                            # 2nd row with additional buttons/options
-        self.powerGrid.addWidget(self.opModeLabel, 1, 0, 2, 1)                  
-        self.powerGrid.addWidget(self.opModeList, 1, 1, 2, 1)
+        # if not opMode == "no operating mode":
+            # self.powerGrid.addWidget(self.opModeLabel, 1, 0, 2, 1)                  
+            # self.powerGrid.addWidget(self.opModeList, 1, 1, 2, 1)
         self.powerGrid.addWidget(self.radioA, 1, 2, 2, 1)
-        self.powerGrid.addWidget(self.radioB, 1, 3, 2, 1)
-        self.powerGrid.addWidget(self.showCheck, 1, 4, 2, 1)
+        self.powerGrid.addWidget(self.radioB, 2, 2, 2, 1)
+        self.powerGrid.addWidget(self.checkAnalog, 1, 0, 2, 1)
+        self.powerGrid.addWidget(self.checkDigital, 2, 0, 2, 1)
 #--------------------------------------------------------
 
         if isModulated:
@@ -411,15 +458,6 @@ class LaserModule(QtWidgets.QWidget):
             lambda: self.sigValueChanged.emit(self.getValue())
         )
 
-# myAdd                                                                                     # not sure why another connect
-        # self.opModeList.currentIndexChanged.connect(                                      # does not work
-        #     lambda i: self.sigOpModeSelected.emit(self.opModeList.itemData(i))    # connect selection
-        # )
-        # self.showCheck.connect(
-        #     lambda enabled: self.sigCheckBoxClicked.emit(enabled)
-        # )
-# -----------------------------------------------------
-
         if isModulated:
             self.modulationEnable.toggled.connect(self.sigModEnabledChanged)
             self.modulationFrequencySlider.valueChanged.connect(
@@ -483,7 +521,10 @@ class LaserModule(QtWidgets.QWidget):
         self.modulationDutyCycleEdit.setText(f"{value}")
         self.modulationDutyCycleSlider.setValue(value)
 
-# myAdd                                                            # for further implemeantation ?
+    def toggleSome(self, test):
+        self.opModeList.addItem(test)
+
+# myAdd                                                            # for further implementation ?
     # def setOperatingMode(self, item):
     #     """ Sets operating mode of laser. """
     #     self.opModeList.setItemData(item)

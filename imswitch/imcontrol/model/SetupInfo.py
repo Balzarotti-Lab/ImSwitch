@@ -69,8 +69,16 @@ class LaserInfo(DeviceInfo):
     """ Initial value of frequency modulation. Don't fill if laser doesn't support it. """
 
     valueRangeStep: float = 1.0
-    """ The default step size of the value range that the laser can be set to.
-    """
+    """ The default step size of the value range that the laser can be set to. """
+
+# myAdd
+    modulation: Optional[str] = "no modulation"
+    """ Options for digital & analog modulation """
+
+    opMode: Optional[str] = "APC ACC no operating mode"
+    """ Switching between ACC & APC"""
+# --------------------------------------------------------
+
 
 
 

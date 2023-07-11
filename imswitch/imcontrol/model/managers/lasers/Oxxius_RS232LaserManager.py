@@ -1,7 +1,5 @@
 from .LaserManager import LaserManager
 
-# import time                                                                                     # --> remove later
-
 class Oxxius_RS232LaserManager(LaserManager):
     """ LaserManager for controlling Cobolt lasers (DPSS Series)
 
@@ -14,16 +12,12 @@ class Oxxius_RS232LaserManager(LaserManager):
             laserInfo.managerProperties['rs232device']
         ]
         super().__init__(laserInfo, name, isBinary=False, valueUnits='mW', valueDecimals=0, isModulated = True)
-
-        # time.sleep(2)                 # for testing with Arduino device (otherwise timeout error)  # --> remove later
         
         self.getFirmware() 
         
 
     def getFirmware(self):
-        """ Gets firmware and sets delimiter to '|', 
-            calling '?GFw' uses default delimiter '§', which is not compatible for RS232Manager?,
-            after a reset delimiter changes back to default """
+        """ Gets firmware """
         cmd = '?HID'
         reply = self._rs232manager.query(cmd)
         print(reply)                                                                                # --> remove later
@@ -37,17 +31,16 @@ class Oxxius_RS232LaserManager(LaserManager):
     def setOperatingMode(self, selectMode: str = "APC"):                            # uses "a" as default mode (at the moment)
         """ Sets potential operating mode """                                                                       # --> remove later
 
-        if selectMode == "a":
+        if selectMode == "APC":
             cmd = 'APC=1'     
-        elif selectMode == "b":
+        elif selectMode == "ACC":
             cmd = 'ACC=1'
-        elif selectMode == "c":
-            cmd = 'c'
         else: cmd = ''
 
         reply = self._rs232manager.query(cmd)
         print(cmd)                                                                              # --> remove later
         print(reply)                                                                            # --> remove later
+        reply = "neuer Wert"
         return reply
         
     def setEnabled(self, enabled):
@@ -61,44 +54,22 @@ class Oxxius_RS232LaserManager(LaserManager):
         print(cmd)                                                                              # --> remove later
         print(reply)                                                                            # --> remove later
 
-    def setModulationState(self, enabled):
-        """ Switch from CW to modulated """
-        if enabled:
-            value = "1"
-        else:
-            value = "0"
-        cmd = 'CW=' + value
-        reply = self._rs232manager.query(cmd)
-        print(cmd)                                                                              # --> remove later
-        print(reply)       
-
-    def anaologModulation(self, enabled):
-        """ Turn on or off analog modulation """
-        if enabled:
-            value = "1"
-        else:
-            value = "0"
-        cmd = 'AM=' + value
-        reply = self._rs232manager.query(cmd)
-        print(cmd)                                                                              # --> remove later
-        print(reply)                                                                            # --> remove later
-    
-    def digitalModulation(self, enabled):
-        """ Turn on or off digital modulation """
-        if enabled:
-            value = "1"
-        else:
-            value = "0"
-        cmd = 'TTL=' + value
-        reply = self._rs232manager.query(cmd)
-        print(cmd)                                                                              # --> remove later
-        print(reply)     
+    # def setModulationState(self, enabled):
+    #     """ Switch from CW to modulated """
+    #     if enabled:
+    #         value = "1"
+    #     else:
+    #         value = "0"
+    #     cmd = 'CW=' + value
+    #     reply = self._rs232manager.query(cmd)
+    #     print(cmd)                                                                              # --> remove later
+    #     print(reply)       
 
     def setValue(self, power):    # (setPowerPercent)
         """ Handles output power.
             Sends a RS232 command to the laser specifying the new intensity. """
         value = round(power)     
-        cmd = 'P=' + value
+        cmd = 'P=' + str(value)
         reply = self._rs232manager.query(cmd)
         print(cmd)                                                                              # --> remove later
         print(reply)
@@ -121,10 +92,34 @@ class Oxxius_RS232LaserManager(LaserManager):
         reply = self._rs232manager.query(cmd)
         print(reply)                                                                            # --> remove later
         return reply
-
-    def checkBoxOption(self):
-        print("Checkbox clicked")                                                               # --> remove later
        
+    def radioButton(self, radio: str="def"):
+        print("toggle RadioButtons")
+        print(radio)
+
+    def setAnalogModulation(self, enabled):
+        """ Turn on or off analog modulation """
+        if enabled:
+            value = "1"
+        else:
+            value = "0"
+        cmd = 'AM=' + value
+        reply = self._rs232manager.query(cmd)
+        print(cmd)                                                                              # --> remove later
+        print(reply)                                                                            # --> remove later
+    
+    def setDigitalModulation(self, enabled):
+        """ Turn on or off digital modulation """
+        if enabled:
+            value = "1"
+        else:
+            value = "0"
+        cmd = 'TTL=' + value
+        reply = self._rs232manager.query(cmd)
+        print(cmd)                                                                              # --> remove later
+        print(reply)     
+        
+
 
 # Copyright (C) 2020-2021 ImSwitch developers
 # This file is part of ImSwitch.
