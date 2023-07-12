@@ -35,6 +35,7 @@ class LaserManager(ABC):
 # myAdd 
         self.__modulation = laserInfo.modulation
         self.__opMode = laserInfo.opMode
+        self.__currentLimits = laserInfo.currentLimits
 # ---------------------------------------
         if isModulated:
             self.__freqRangeMin = laserInfo.freqRangeMin
@@ -55,6 +56,11 @@ class LaserManager(ABC):
     def opMode(self) -> str:
         """ possible operating modes, defined in the laser's setup info. """
         return self.__opMode
+    
+    @property
+    def currentLimits(self) -> float:
+        """ possible operating modes, defined in the laser's setup info. """
+        return self.__currentLimits
 # ---------------------------------------
     @property
     def name(self) -> str:

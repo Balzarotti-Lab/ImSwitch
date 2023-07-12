@@ -27,26 +27,26 @@ class CoboltDPSS_RS232LaserManager(LaserManager):
         print(reply)                                                                                # --> remove later
         return reply
 
-    def getOperatingMode(self):
-        """ Returns the selected frequency of the laser. """
-        cmd = ''
-        return self._rs232manager.query(cmd)
+    # def getOperatingMode(self):
+    #     """ Returns the selected frequency of the laser. """
+    #     cmd = ''
+    #     return self._rs232manager.query(cmd)
 
-    def setOperatingMode(self, selectMode: str = "a"):                            # uses "a" as default mode (at the moment)
-        """ Sets potential operating mode """                                                                       # --> remove later
+    # def setOperatingMode(self, selectMode: str = "a"):                            # uses "a" as default mode (at the moment)
+    #     """ Sets potential operating mode """                                                                       # --> remove later
 
-        if selectMode == "a":
-            cmd = 'a'     
-        elif selectMode == "b":
-            cmd = 'b'
-        elif selectMode == "c":
-            cmd = 'c'
-        else: cmd = ''
+    #     if selectMode == "a":
+    #         cmd = 'a'     
+    #     elif selectMode == "b":
+    #         cmd = 'b'
+    #     elif selectMode == "c":
+    #         cmd = 'c'
+    #     else: cmd = ''
 
-        reply = self._rs232manager.query(cmd)
-        print(cmd)                                                                              # --> remove later
-        print(reply)                                                                            # --> remove later
-        return reply
+    #     reply = self._rs232manager.query(cmd)
+    #     print(cmd)                                                                              # --> remove later
+    #     print(reply)                                                                            # --> remove later
+    #     return reply
         
     def deactAutoStart(self):  
         """ Disables Autostart """
@@ -73,6 +73,26 @@ class CoboltDPSS_RS232LaserManager(LaserManager):
         reply = self._rs232manager.query(cmd)
         print(cmd)                                                                              # --> remove later
         print(reply)
+
+    def setCurrent(self, current):    # (setCurrentPercent)
+        """ Handles laser current.
+            Sends a RS232 command to the laser specifying the new intensity. """
+        value = round(current, 2)     
+        cmd = 'slc {:.2f}'.format(value)
+        reply = self._rs232manager.query(cmd)
+        print(cmd)                                                                              # --> remove later
+        print(reply)
+
+    def setOperatingMode(self, selectMode: str = "APC"):                            # uses "a" as default mode (at the moment)
+        """ Sets potential operating mode """                                                                       # --> remove later
+        if selectMode == "APC":
+            cmd = 'cp'     
+        elif selectMode == "ACC":
+            cmd = 'ci'
+        reply = self._rs232manager.query(cmd)
+        print(cmd)                                                                              # --> remove later
+        print(reply)                                                                            # --> remove later
+        return reply
 
     def getPowerPercent(self):
         """ Get setted power in percent """

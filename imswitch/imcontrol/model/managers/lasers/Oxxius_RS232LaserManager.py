@@ -13,7 +13,12 @@ class Oxxius_RS232LaserManager(LaserManager):
         ]
         super().__init__(laserInfo, name, isBinary=False, valueUnits='mW', valueDecimals=0, isModulated = True)
         
-        self.getFirmware() 
+        self.getFirmware()
+        self.setOperatingMode()
+        self.setAnalogModulation()
+        self.setDigitalModulation()
+
+
         
 
     def getFirmware(self):
@@ -23,24 +28,15 @@ class Oxxius_RS232LaserManager(LaserManager):
         print(reply)                                                                                # --> remove later
         return reply
 
-    def getOperatingMode(self):
-        """ Returns the selected frequency of the laser. """
-        cmd = ''
-        return self._rs232manager.query(cmd)
-
     def setOperatingMode(self, selectMode: str = "APC"):                            # uses "a" as default mode (at the moment)
         """ Sets potential operating mode """                                                                       # --> remove later
-
         if selectMode == "APC":
             cmd = 'APC=1'     
         elif selectMode == "ACC":
             cmd = 'ACC=1'
-        else: cmd = ''
-
         reply = self._rs232manager.query(cmd)
         print(cmd)                                                                              # --> remove later
         print(reply)                                                                            # --> remove later
-        reply = "neuer Wert"
         return reply
         
     def setEnabled(self, enabled):
@@ -74,6 +70,15 @@ class Oxxius_RS232LaserManager(LaserManager):
         print(cmd)                                                                              # --> remove later
         print(reply)
 
+    def setCurrent(self, current):    # (setCurrentPercent)
+        """ Handles laser current.
+            Sends a RS232 command to the laser specifying the new intensity. """
+        value = round(current, 2)     
+        cmd = 'C=' + str(value)
+        reply = self._rs232manager.query(cmd)
+        print(cmd)                                                                           # --> remove later
+        print(reply)
+
     def getPowerPercent(self):
         """ Get setted power in percent """
         cmd = '?SP'
@@ -92,12 +97,8 @@ class Oxxius_RS232LaserManager(LaserManager):
         reply = self._rs232manager.query(cmd)
         print(reply)                                                                            # --> remove later
         return reply
-       
-    def radioButton(self, radio: str="def"):
-        print("toggle RadioButtons")
-        print(radio)
 
-    def setAnalogModulation(self, enabled):
+    def setAnalogModulation(self, enabled: bool = False):
         """ Turn on or off analog modulation """
         if enabled:
             value = "1"
@@ -108,7 +109,7 @@ class Oxxius_RS232LaserManager(LaserManager):
         print(cmd)                                                                              # --> remove later
         print(reply)                                                                            # --> remove later
     
-    def setDigitalModulation(self, enabled):
+    def setDigitalModulation(self, enabled: bool = False):
         """ Turn on or off digital modulation """
         if enabled:
             value = "1"
@@ -119,6 +120,8 @@ class Oxxius_RS232LaserManager(LaserManager):
         print(cmd)                                                                              # --> remove later
         print(reply)     
         
+
+    
 
 
 # Copyright (C) 2020-2021 ImSwitch developers

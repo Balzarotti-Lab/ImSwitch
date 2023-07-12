@@ -27,6 +27,7 @@ class LaserExtendedWidget(Widget):
     sigRadioButtonToggled = QtCore.Signal(str, str)
     sigAnalogClicked = QtCore.Signal(str, bool)
     sigDigitalClicked = QtCore.Signal(str, bool)
+    sigCurrentChanged = QtCore.Signal(str, float)  # (laserName, current)
 #--------------------------------------------
 
     def __init__(self, *args, **kwargs):
@@ -90,7 +91,7 @@ class LaserExtendedWidget(Widget):
 
         self.layout.addLayout(self.presetsBox, 1, 0)
              
-    def addLaser(self, laserName, valueUnits, valueDecimals, wavelength, modulation, opMode, valueRange=None,                # myAdd
+    def addLaser(self, laserName, valueUnits, valueDecimals, wavelength, modulation, opMode, currentLimits, valueRange=None,                # myAdd
                  valueRangeStep=1, frequencyRange=(0, 0, 0)):
         """ Adds a laser module widget. valueRange is either a tuple
         (min, max), or None (if the laser can only be turned on/off).
@@ -99,8 +100,9 @@ class LaserExtendedWidget(Widget):
 
         control = LaserModule(
             valueUnits=valueUnits, valueDecimals=valueDecimals, valueRange=valueRange,
-            tickInterval=5, singleStep=valueRangeStep, modulation=modulation, opMode=opMode,                                 # myAdd
+            tickInterval=5, singleStep=valueRangeStep, modulation=modulation, opMode=opMode, currentLimits=currentLimits,                                # myAdd
             initialPower=valueRange[0] if valueRange is not None else 0,
+            initialCurrent=currentLimits[0] if currentLimits is not -1 else 0,                                                                           # myAdd
             frequencyRange=frequencyRange
         )
         control.sigEnableChanged.connect(
@@ -122,6 +124,9 @@ class LaserExtendedWidget(Widget):
         )
         control.sigDigitalClicked.connect(
             lambda enabled: self.sigDigitalClicked.emit(laserName, enabled)
+        )
+        control.sigCurrentChanged.connect(
+            lambda current: self.sigCurrentChanged.emit(laserName, current)
         )
 # -----------------------------------------------------
         if all(num > 0 for num in frequencyRange):
@@ -177,6 +182,18 @@ class LaserExtendedWidget(Widget):
         """ Sets the value of the specified laser, in the units that the laser
         uses. """
         self.laserModules[laserName].setValue(value)
+
+# myAdd
+    def setCurrent(self, laserName, current):
+        """ Sets the value of the specified laser, in the units that the laser
+        uses. """
+        self.laserModules[laserName].setCurrent(current)
+    
+    def getCurrent(self, laserName):
+        """ Returns the value of the specified laser, in the units that the
+        laser uses. """
+        return self.laserModules[laserName].getCurrent()
+# -------------------------------------------------
     
     def setModulationFrequency(self, laserName, value):
         """ Sets the modulation frequency of the specified laser. """
@@ -247,9 +264,13 @@ class LaserExtendedWidget(Widget):
 
         return False
     
+# myAdd
     def toggleSome(self, laserName, test):
         self.laserModules[laserName].toggleSome(test)
 
+    def toggleSlider(self, laserName, mode):
+        self.laserModules[laserName].toggleSlider(mode)
+# -------------------------------------------------------
 
 class LaserModule(QtWidgets.QWidget):
     """ Module from LaserWidget to handle a single laser. """
@@ -266,10 +287,12 @@ class LaserModule(QtWidgets.QWidget):
     sigRadioButtonToggled = QtCore.Signal(str)
     sigAnalogClicked = QtCore.Signal(bool)
     sigDigitalClicked = QtCore.Signal(bool)
+
+    sigCurrentChanged = QtCore.Signal(float)  # (current)
 #--------------------------------------------
 
     def __init__(self, valueUnits, valueDecimals, valueRange, tickInterval, singleStep,
-                 initialPower, frequencyRange, modulation, opMode, *args, **kwargs):                               # myAdd
+                 initialPower, frequencyRange, modulation, opMode, currentLimits, initialCurrent, *args, **kwargs):                               # myAdd
         super().__init__(*args, **kwargs)
         self.valueDecimals = valueDecimals
 
@@ -292,6 +315,23 @@ class LaserModule(QtWidgets.QWidget):
                                            decimals=valueDecimals)
         self.slider.setFocusPolicy(QtCore.Qt.NoFocus)
 
+# myAdd
+        self.setPointLabel2 = QtWidgets.QLabel(f'Setpoint [A]')
+        self.setPointLabel2.setAlignment(QtCore.Qt.AlignCenter)
+        self.setPointEdit2 = QtWidgets.QLineEdit(str(initialCurrent))
+        self.setPointEdit2.setFixedWidth(50)
+        self.setPointEdit2.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+
+        self.mincurrent = QtWidgets.QLabel()
+        self.mincurrent.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.maxcurrent = QtWidgets.QLabel()
+        self.maxpower.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+
+        self.slider2 = guitools.FloatSlider(QtCore.Qt.Horizontal, self, allowScrollChanges=False,
+                                           decimals=2)                                                                      # my Add decimals=2 hard coded
+        self.slider2.setFocusPolicy(QtCore.Qt.NoFocus)
+# ------------------------------------------
+
         if not isBinary:
             valueRangeMin, valueRangeMax = valueRange
 
@@ -303,7 +343,17 @@ class LaserModule(QtWidgets.QWidget):
             self.slider.setTickInterval(tickInterval)
             self.slider.setSingleStep(singleStep)
             self.slider.setValue(0)
+# myAdd     
+        if not currentLimits == -1:
+            self.mincurrent.setText(str(currentLimits[0]))
+            self.maxcurrent.setText(str(currentLimits[1]))
 
+            self.slider2.setMinimum(currentLimits[0])
+            self.slider2.setMaximum(currentLimits[1])
+            self.slider2.setTickInterval(tickInterval)
+            self.slider2.setSingleStep(singleStep)
+            self.slider2.setValue(0)
+# --------------------------------------------------------
 # myAdd
         self.opModeLabel = QtWidgets.QLabel('Operating Mode:')
         self.opModeList = QtWidgets.QComboBox()
@@ -335,6 +385,9 @@ class LaserModule(QtWidgets.QWidget):
         #     self.checkAnalog.clicked.connect(lambda:self.checkDigital.setChecked(False))
         #     self.checkDigital.clicked.connect(lambda:self.checkAnalog.setChecked(False))
         
+        if "APC (no modulation)" in opMode:                                                              # feature just for QuixX Laser
+            self.checkAnalog.setEnabled(False)
+            self.checkDigital.setEnabled(False)
         if "APC (analog only)" in opMode:                                                              # feature just for Oxxius Laser
             self.checkDigital.setEnabled(False)
 
@@ -347,6 +400,13 @@ class LaserModule(QtWidgets.QWidget):
         self.radioB.clicked.connect(
             lambda: self.sigRadioButtonToggled.emit(self.radioB.text()))
         
+        if "APC (no modulation)" in opMode:                                                               # feature just for QuixX Laser
+            self.radioA.clicked.connect(lambda: self.checkAnalog.setEnabled(False))
+            self.radioA.clicked.connect(lambda: self.checkAnalog.setChecked(False))
+            self.radioA.clicked.connect(lambda: self.checkDigital.setEnabled(False))
+            self.radioA.clicked.connect(lambda: self.checkDigital.setChecked(False))
+            self.radioB.clicked.connect(lambda: self.checkAnalog.setEnabled(True))
+            self.radioB.clicked.connect(lambda: self.checkDigital.setEnabled(True))
         if "APC (analog only)" in opMode:                                                               # feature just for Oxxius Laser
             self.radioA.clicked.connect(lambda: self.checkDigital.setEnabled(False))
             self.radioA.clicked.connect(lambda: self.checkDigital.setChecked(False))
@@ -366,6 +426,8 @@ class LaserModule(QtWidgets.QWidget):
         self.powerGrid.addWidget(self.minpower, 0, 2, 2, 1)
         self.powerGrid.addWidget(self.slider, 0, 3, 2, 1)
         self.powerGrid.addWidget(self.maxpower, 0, 4, 2, 1)
+        # self.slider.hide()
+        # self.slider.show()
 
 # myAdd                                                            # 2nd row with additional buttons/options
         # if not opMode == "no operating mode":
@@ -375,6 +437,19 @@ class LaserModule(QtWidgets.QWidget):
         self.powerGrid.addWidget(self.radioB, 2, 2, 2, 1)
         self.powerGrid.addWidget(self.checkAnalog, 1, 0, 2, 1)
         self.powerGrid.addWidget(self.checkDigital, 2, 0, 2, 1)
+
+        if not currentLimits == -1:
+            self.powerGrid.addWidget(self.setPointLabel2, 0, 0, 2, 1)
+            self.powerGrid.addWidget(self.setPointEdit2, 0, 1, 2, 1)
+            self.powerGrid.addWidget(self.mincurrent, 0, 2, 2, 1)
+            self.powerGrid.addWidget(self.slider2, 0, 3, 2, 1)
+            self.powerGrid.addWidget(self.maxcurrent, 0, 4, 2, 1)
+
+            self.setPointLabel2.hide()
+            self.setPointEdit2.hide()
+            self.mincurrent.hide()
+            self.slider2.hide()
+            self.maxcurrent.hide()
 #--------------------------------------------------------
 
         if isModulated:
@@ -458,6 +533,14 @@ class LaserModule(QtWidgets.QWidget):
             lambda: self.sigValueChanged.emit(self.getValue())
         )
 
+# myAdd
+        self.slider2.valueChanged.connect(
+            lambda current: self.sigCurrentChanged.emit(current)
+        )
+        self.setPointEdit2.returnPressed.connect(
+            lambda: self.sigCurrentChanged.emit(self.getCurrent())
+        )
+# -----------------------------------
         if isModulated:
             self.modulationEnable.toggled.connect(self.sigModEnabledChanged)
             self.modulationFrequencySlider.valueChanged.connect(
@@ -510,6 +593,18 @@ class LaserModule(QtWidgets.QWidget):
         """ Sets the value of the laser, in the units that the laser uses. """
         self.setPointEdit.setText(f'%.{self.valueDecimals}f' % value)
         self.slider.setValue(value)
+
+# myAdd
+    def setCurrent(self, value):
+        """ Sets the value of the laser, in the units that the laser uses. """
+        self.setPointEdit2.setText(f'%.{2}f' % value)                                       # myAdd
+        self.slider2.setValue(value)
+
+    def getCurrent(self):
+        """ Returns the value of the laser, in the units that the laser
+        uses. """
+        return float(self.setPointEdit2.text())
+# ------------------------------------------------------
     
     def setModulationFrequency(self, value):
         """ Sets the laser modulation frequency. """
@@ -520,10 +615,35 @@ class LaserModule(QtWidgets.QWidget):
         """ Sets the laser modulation duty cycle. """
         self.modulationDutyCycleEdit.setText(f"{value}")
         self.modulationDutyCycleSlider.setValue(value)
-
+# myAdd                                                                         can be removed (for testing)
     def toggleSome(self, test):
         self.opModeList.addItem(test)
 
+    def toggleSlider(self, mode):
+        if mode == "ACC":
+            self.setPointLabel.hide()
+            self.setPointEdit.hide()
+            self.minpower.hide()
+            self.slider.hide()
+            self.maxpower.hide()
+            self.setPointLabel2.show()
+            self.setPointEdit2.show()
+            self.mincurrent.show()
+            self.slider2.show()
+            self.maxcurrent.show()
+        elif mode == "APC" or "APC analog only": 
+            self.setPointLabel2.hide()
+            self.setPointEdit2.hide()
+            self.mincurrent.hide()
+            self.slider2.hide()
+            self.maxcurrent.hide()
+            self.setPointLabel.show()
+            self.setPointEdit.show()
+            self.minpower.show()
+            self.slider.show()
+            self.maxpower.show()
+        
+# ----------------------------------------------------------
 # myAdd                                                            # for further implementation ?
     # def setOperatingMode(self, item):
     #     """ Sets operating mode of laser. """

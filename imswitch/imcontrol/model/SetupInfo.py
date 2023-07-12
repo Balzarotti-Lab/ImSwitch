@@ -76,7 +76,10 @@ class LaserInfo(DeviceInfo):
     """ Options for digital & analog modulation """
 
     opMode: Optional[str] = "APC ACC no operating mode"
-    """ Switching between ACC & APC"""
+    """ Switching between ACC & APC """
+
+    currentLimits: Optional[float] = -1
+    """ Limits for laser current """
 # --------------------------------------------------------
 
 

@@ -28,10 +28,10 @@ class Toptica_iBeam_RS232LaserManager(LaserManager):
         print(reply)                                                                                # --> remove later
         return reply
 
-    def getOperatingMode(self):
-        """ Returns the. """
-        cmd = ''
-        return self._rs232manager.query(cmd)
+    # def getOperatingMode(self):
+    #     """ Returns the. """
+    #     cmd = ''
+    #     return self._rs232manager.query(cmd)
 
     # def setOperatingMode(self, selectMode: str = "a"):                            # uses "a" as default mode (at the moment)
     #     """ Sets potential operating mode """                                                                       # --> remove later

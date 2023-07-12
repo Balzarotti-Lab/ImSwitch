@@ -18,7 +18,7 @@ class LaserExtendedController(ImConWidgetController):
         # Set up lasers
         for lName, lManager in self._master.lasersManager:
             self._widget.addLaser(
-                lName, lManager.valueUnits, lManager.valueDecimals, lManager.wavelength, lManager.modulation, lManager.opMode,                      # myAdd
+                lName, lManager.valueUnits, lManager.valueDecimals, lManager.wavelength, lManager.modulation, lManager.opMode, lManager.currentLimits,                   # myAdd
                 (lManager.valueRangeMin, lManager.valueRangeMax) if not lManager.isBinary else None,
                 lManager.valueRangeStep if lManager.valueRangeStep is not None else None,
                 (lManager.freqRangeMin, lManager.freqRangeMax, lManager.freqRangeInit) if lManager.isModulated else (0, 0, 0)
@@ -28,6 +28,11 @@ class LaserExtendedController(ImConWidgetController):
 
             self.setSharedAttr(lName, _enabledAttr, self._widget.isLaserActive(lName))
             self.setSharedAttr(lName, _valueAttr, self._widget.getValue(lName))
+# myAdd
+            if not lManager.currentLimits == -1:
+                self.currentChanged(lName, lManager.currentLimits[0])
+                self.setSharedAttr(lName, _currentAttr, self._widget.getCurrent(lName))             # ????????????????????
+# -----------------------------------------
 
         # Load presets
         for laserPresetName in self._setupInfo.laserPresets:
@@ -62,11 +67,16 @@ class LaserExtendedController(ImConWidgetController):
         self._widget.sigRadioButtonToggled.connect(self.toggleOpMode)
         self._widget.sigAnalogClicked.connect(self.toggleAnalog)
         self._widget.sigDigitalClicked.connect(self.toggleDigital)
+
+        self._widget.sigCurrentChanged.connect(self.currentChanged)
 # --------------------------------------------------
 
     def closeEvent(self):
         self._master.lasersManager.execOnAll(lambda l: l.setScanModeActive(False))
         self._master.lasersManager.execOnAll(lambda l: l.setValue(0))
+# myAdd
+        self._master.lasersManager.execOnAll(lambda l: l.setCurrent(0))
+# --------------------------------------------------
 
     def toggleLaser(self, laserName, enabled):
         """ Enable or disable laser (on/off)."""
@@ -78,7 +88,7 @@ class LaserExtendedController(ImConWidgetController):
         """ Toggle operating mode."""
         reply = self._master.lasersManager[laserName].setOperatingMode(selectMode)
         print(reply)
-        # self._widget.toggleSome(laserName, reply)
+        self._widget.toggleSlider(laserName, selectMode)
         self.setSharedAttr(laserName, _opMode, selectMode)                  #????? important?
 
     def toggleOpModeOld(self, laserName, selectMode):
@@ -100,6 +110,12 @@ class LaserExtendedController(ImConWidgetController):
         """ Toggle Checkbox."""
         self._master.lasersManager[laserName].setDigitalModulation(enabled)
         self.setSharedAttr(laserName, _digitalAttr, enabled)                      #????? important?
+
+    def currentChanged(self, laserName, magnitude):
+        """ Change current magnitude. """
+        self._master.lasersManager[laserName].setCurrent(magnitude)
+        self._widget.setCurrent(laserName, magnitude)
+        self.setSharedAttr(laserName, _currentAttr, magnitude)
 # ------------------------------------------
 
     def valueChanged(self, laserName, magnitude):
@@ -351,6 +367,7 @@ _dcAttr = "DutyCycle"
 _opMode = 'SelectedMode'
 _analogAttr = 'AnalogMod'
 _digitalAttr = 'DigitalMod'
+_currentAttr = 'Current'
 # -------------------------------------
 
 
