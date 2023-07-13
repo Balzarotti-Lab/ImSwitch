@@ -34,7 +34,7 @@ class LaserExtendedWidget(Widget):
         super().__init__(*args, **kwargs)
         self.laserModules = {}
 
-        self.setMinimumHeight(320)
+        self.setMinimumHeight(480)
 
         self.layout = QtWidgets.QGridLayout()
         self.setLayout(self.layout)
@@ -91,7 +91,7 @@ class LaserExtendedWidget(Widget):
 
         self.layout.addLayout(self.presetsBox, 1, 0)
              
-    def addLaser(self, laserName, valueUnits, valueDecimals, wavelength, modulation, opMode, currentLimits, valueRange=None,                # myAdd
+    def addLaser(self, laserName, valueUnits, valueDecimals, wavelength, modulation, opMode, currentLimits, currentUnits, valueRange=None,                # myAdd
                  valueRangeStep=1, frequencyRange=(0, 0, 0)):
         """ Adds a laser module widget. valueRange is either a tuple
         (min, max), or None (if the laser can only be turned on/off).
@@ -100,7 +100,7 @@ class LaserExtendedWidget(Widget):
 
         control = LaserModule(
             valueUnits=valueUnits, valueDecimals=valueDecimals, valueRange=valueRange,
-            tickInterval=5, singleStep=valueRangeStep, modulation=modulation, opMode=opMode, currentLimits=currentLimits,                                # myAdd
+            tickInterval=5, singleStep=valueRangeStep, modulation=modulation, opMode=opMode, currentLimits=currentLimits, currentUnits=currentUnits,                              # myAdd
             initialPower=valueRange[0] if valueRange is not None else 0,
             initialCurrent=currentLimits[0] if currentLimits is not -1 else 0,                                                                           # myAdd
             frequencyRange=frequencyRange
@@ -265,9 +265,6 @@ class LaserExtendedWidget(Widget):
         return False
     
 # myAdd
-    def toggleSome(self, laserName, test):
-        self.laserModules[laserName].toggleSome(test)
-
     def toggleSlider(self, laserName, mode):
         self.laserModules[laserName].toggleSlider(mode)
 # -------------------------------------------------------
@@ -292,7 +289,7 @@ class LaserModule(QtWidgets.QWidget):
 #--------------------------------------------
 
     def __init__(self, valueUnits, valueDecimals, valueRange, tickInterval, singleStep,
-                 initialPower, frequencyRange, modulation, opMode, currentLimits, initialCurrent, *args, **kwargs):                               # myAdd
+                 initialPower, frequencyRange, modulation, opMode, currentLimits, initialCurrent, currentUnits, *args, **kwargs):                               # myAdd
         super().__init__(*args, **kwargs)
         self.valueDecimals = valueDecimals
 
@@ -316,7 +313,9 @@ class LaserModule(QtWidgets.QWidget):
         self.slider.setFocusPolicy(QtCore.Qt.NoFocus)
 
 # myAdd
-        self.setPointLabel2 = QtWidgets.QLabel(f'Setpoint [A]')
+        self.currentLimits = currentLimits
+
+        self.setPointLabel2 = QtWidgets.QLabel(f'Setpoint [{currentUnits}]')
         self.setPointLabel2.setAlignment(QtCore.Qt.AlignCenter)
         self.setPointEdit2 = QtWidgets.QLineEdit(str(initialCurrent))
         self.setPointEdit2.setFixedWidth(50)
@@ -426,18 +425,13 @@ class LaserModule(QtWidgets.QWidget):
         self.powerGrid.addWidget(self.minpower, 0, 2, 2, 1)
         self.powerGrid.addWidget(self.slider, 0, 3, 2, 1)
         self.powerGrid.addWidget(self.maxpower, 0, 4, 2, 1)
-        # self.slider.hide()
-        # self.slider.show()
 
 # myAdd                                                            # 2nd row with additional buttons/options
-        # if not opMode == "no operating mode":
-            # self.powerGrid.addWidget(self.opModeLabel, 1, 0, 2, 1)                  
-            # self.powerGrid.addWidget(self.opModeList, 1, 1, 2, 1)
-        self.powerGrid.addWidget(self.radioA, 1, 2, 2, 1)
-        self.powerGrid.addWidget(self.radioB, 2, 2, 2, 1)
         self.powerGrid.addWidget(self.checkAnalog, 1, 0, 2, 1)
         self.powerGrid.addWidget(self.checkDigital, 2, 0, 2, 1)
-
+        self.powerGrid.addWidget(self.radioA, 1, 3, 2, 1)
+        self.powerGrid.addWidget(self.radioB, 2, 3, 2, 1)
+        
         if not currentLimits == -1:
             self.powerGrid.addWidget(self.setPointLabel2, 0, 0, 2, 1)
             self.powerGrid.addWidget(self.setPointEdit2, 0, 1, 2, 1)
@@ -615,33 +609,33 @@ class LaserModule(QtWidgets.QWidget):
         """ Sets the laser modulation duty cycle. """
         self.modulationDutyCycleEdit.setText(f"{value}")
         self.modulationDutyCycleSlider.setValue(value)
-# myAdd                                                                         can be removed (for testing)
-    def toggleSome(self, test):
-        self.opModeList.addItem(test)
 
+# myAdd
     def toggleSlider(self, mode):
-        if mode == "ACC":
-            self.setPointLabel.hide()
-            self.setPointEdit.hide()
-            self.minpower.hide()
-            self.slider.hide()
-            self.maxpower.hide()
-            self.setPointLabel2.show()
-            self.setPointEdit2.show()
-            self.mincurrent.show()
-            self.slider2.show()
-            self.maxcurrent.show()
-        elif mode == "APC" or "APC analog only": 
-            self.setPointLabel2.hide()
-            self.setPointEdit2.hide()
-            self.mincurrent.hide()
-            self.slider2.hide()
-            self.maxcurrent.hide()
-            self.setPointLabel.show()
-            self.setPointEdit.show()
-            self.minpower.show()
-            self.slider.show()
-            self.maxpower.show()
+        if not self.currentLimits == -1:  
+            print("mode ", mode)
+            if mode == "ACC":
+                self.setPointLabel.hide()
+                self.setPointEdit.hide()
+                self.minpower.hide()
+                self.slider.hide()
+                self.maxpower.hide()
+                self.setPointLabel2.show()
+                self.setPointEdit2.show()
+                self.mincurrent.show()
+                self.slider2.show()
+                self.maxcurrent.show()
+            elif mode == "APC" or mode == "APC (analog only)" or mode == "APC (no modulation)": 
+                self.setPointLabel2.hide()
+                self.setPointEdit2.hide()
+                self.mincurrent.hide()
+                self.slider2.hide()
+                self.maxcurrent.hide()
+                self.setPointLabel.show()
+                self.setPointEdit.show()
+                self.minpower.show()
+                self.slider.show()
+                self.maxpower.show()
         
 # ----------------------------------------------------------
 # myAdd                                                            # for further implementation ?

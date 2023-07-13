@@ -9,7 +9,7 @@ class LaserManager(ABC):
 
     @abstractmethod
     def __init__(self, laserInfo, name: str, isBinary: bool, valueUnits: str,
-                 valueDecimals: int, isModulated: bool = False) -> None:
+                 valueDecimals: int, isModulated: bool = False, currentUnits: str = "A") -> None:
         """
         Args:
             laserInfo: See setup file documentation.
@@ -36,6 +36,7 @@ class LaserManager(ABC):
         self.__modulation = laserInfo.modulation
         self.__opMode = laserInfo.opMode
         self.__currentLimits = laserInfo.currentLimits
+        self.__currentUnits = currentUnits
 # ---------------------------------------
         if isModulated:
             self.__freqRangeMin = laserInfo.freqRangeMin
@@ -61,6 +62,11 @@ class LaserManager(ABC):
     def currentLimits(self) -> float:
         """ possible operating modes, defined in the laser's setup info. """
         return self.__currentLimits
+    
+    @property
+    def currentUnits(self) -> str:
+        """ The units of the laser value, e.g. "A" or "mA". """
+        return self.__currentUnits
 # ---------------------------------------
     @property
     def name(self) -> str:

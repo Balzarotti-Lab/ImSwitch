@@ -11,15 +11,12 @@ class Oxxius_RS232LaserManager(LaserManager):
         self._rs232manager = lowLevelManagers['rs232sManager'][
             laserInfo.managerProperties['rs232device']
         ]
-        super().__init__(laserInfo, name, isBinary=False, valueUnits='mW', valueDecimals=0, isModulated = True)
+        super().__init__(laserInfo, name, isBinary=False, valueUnits='mW', valueDecimals=0, isModulated = True, currentUnits='mA')
         
         self.getFirmware()
         self.setOperatingMode()
         self.setAnalogModulation()
         self.setDigitalModulation()
-
-
-        
 
     def getFirmware(self):
         """ Gets firmware """
@@ -28,9 +25,9 @@ class Oxxius_RS232LaserManager(LaserManager):
         print(reply)                                                                                # --> remove later
         return reply
 
-    def setOperatingMode(self, selectMode: str = "APC"):                            # uses "a" as default mode (at the moment)
+    def setOperatingMode(self, selectMode: str = "APC (analog only)"):                            # uses "a" as default mode (at the moment)
         """ Sets potential operating mode """                                                                       # --> remove later
-        if selectMode == "APC":
+        if selectMode == "APC (analog only)":
             cmd = 'APC=1'     
         elif selectMode == "ACC":
             cmd = 'ACC=1'

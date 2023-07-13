@@ -18,7 +18,7 @@ class LaserExtendedController(ImConWidgetController):
         # Set up lasers
         for lName, lManager in self._master.lasersManager:
             self._widget.addLaser(
-                lName, lManager.valueUnits, lManager.valueDecimals, lManager.wavelength, lManager.modulation, lManager.opMode, lManager.currentLimits,                   # myAdd
+                lName, lManager.valueUnits, lManager.valueDecimals, lManager.wavelength, lManager.modulation, lManager.opMode, lManager.currentLimits, lManager.currentUnits,                  # myAdd
                 (lManager.valueRangeMin, lManager.valueRangeMax) if not lManager.isBinary else None,
                 lManager.valueRangeStep if lManager.valueRangeStep is not None else None,
                 (lManager.freqRangeMin, lManager.freqRangeMax, lManager.freqRangeInit) if lManager.isModulated else (0, 0, 0)
@@ -89,13 +89,6 @@ class LaserExtendedController(ImConWidgetController):
         reply = self._master.lasersManager[laserName].setOperatingMode(selectMode)
         print(reply)
         self._widget.toggleSlider(laserName, selectMode)
-        self.setSharedAttr(laserName, _opMode, selectMode)                  #????? important?
-
-    def toggleOpModeOld(self, laserName, selectMode):
-        """ Toggle operating mode."""
-        reply = self._master.lasersManager[laserName].setOperatingMode(selectMode)
-        print(reply)
-        self._widget.toggleSome(laserName, reply)
         self.setSharedAttr(laserName, _opMode, selectMode)                  #????? important?
 
     def toggleAnalog(self, laserName, enabled):

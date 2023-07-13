@@ -12,7 +12,7 @@ class CoboltDPSS_RS232LaserManager(LaserManager):
         self._rs232manager = lowLevelManagers['rs232sManager'][
             laserInfo.managerProperties['rs232device']
         ]
-        super().__init__(laserInfo, name, isBinary=False, valueUnits='mW', valueDecimals=0, isModulated = True)
+        super().__init__(laserInfo, name, isBinary=False, valueUnits='mW', valueDecimals=0, isModulated = True, currentUnits='A')
         
         self.getFirmware() 
         self.deactAutoStart()

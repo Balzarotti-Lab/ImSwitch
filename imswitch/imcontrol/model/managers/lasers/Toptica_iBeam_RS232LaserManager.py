@@ -1,5 +1,6 @@
 from .LaserManager import LaserManager
 
+
 class Toptica_iBeam_RS232LaserManager(LaserManager):
     """ LaserManager for controlling Toptica iBeamSmart Lasers
     
@@ -14,41 +15,19 @@ class Toptica_iBeam_RS232LaserManager(LaserManager):
        
         super().__init__(laserInfo, name, isBinary=False, valueUnits='mW', valueDecimals=0, isModulated = True)
 
-        
-        self.getFirmware() 
-        self.enableChannel2()
+        self.getFirmware()
+        self.powerLevel = 0.0
+        self.channel1Status = True
+        self.setAnalogModulation(False)
+        self.setDigitalModulation(False)
        
 
     def getFirmware(self):
-        """ Gets firmware and sets delimiter to '|', 
-            calling '?GFw' uses default delimiter '§', which is not compatible for RS232Manager?,
-            after a reset delimiter changes back to default """
+        """ Gets firmware """
         cmd = 'ver'
         reply = self._rs232manager.query(cmd)
         print(reply)                                                                                # --> remove later
         return reply
-
-    # def getOperatingMode(self):
-    #     """ Returns the. """
-    #     cmd = ''
-    #     return self._rs232manager.query(cmd)
-
-    # def setOperatingMode(self, selectMode: str = "a"):                            # uses "a" as default mode (at the moment)
-    #     """ Sets potential operating mode """                                                                       # --> remove later
-
-    #     if selectMode == "a":
-    #         cmd = 'a'     
-    #     elif selectMode == "b":
-    #         cmd = 'b'
-    #     elif selectMode == "c":
-    #         cmd = 'c'
-    #     else: cmd = ''
-
-    #     reply = self._rs232manager.query(cmd)
-    #     reply = 'neuer Wert'
-    #     print(cmd)                                                                              # --> remove later
-    #     print(reply)                                                                            # --> remove later
-    #     return reply
         
     def enableChannel2(self):  
         """ Enables Channel 2 """
@@ -56,7 +35,15 @@ class Toptica_iBeam_RS232LaserManager(LaserManager):
         self._rs232manager.query(cmd)
         cmd = 'en 2'
         reply = self._rs232manager.query(cmd)
-        print(reply)                                                                            # --> remove later
+        print(reply)      
+        
+    # def toggleChannel(self, channel):  
+    #     """ toogle Channel """
+    #     cmd = 'ch 1 pow 0.0'        # sets Ch1 to Zero 
+    #     self._rs232manager.query(cmd)
+    #     cmd = 'en 2'
+    #     reply = self._rs232manager.query(cmd)
+    #     print(reply)                                                                        # --> remove later
 
     # def disableChannel2(self):  
     #     """ disables Channel 2 """
@@ -80,13 +67,32 @@ class Toptica_iBeam_RS232LaserManager(LaserManager):
         value = round(power)         # assuming input value is [0,1023]
         cmd = 'ch 2 pow ' + str(value)
         self._rs232manager.query(cmd)
+        if self.channel1Status == True:
+            cmd = 'ch 1 pow ' + str(value)
+            self._rs232manager.query(cmd)
+        self.powerLevel = value
         print(cmd)                                                                              # --> remove later
-                                                                                       
+
+    def setCurrent(self, current):    # (setCurrentPercent)
+        pass
+           
     def getPowerPercent(self):
         """ Get set-power in percent of all available levels """
         cmd = 'sh level pow'
         reply = self._rs232manager.query(cmd)
         print(reply)                                                                            # --> remove later
+
+    def setAnalogModulation(self, enabled):
+        """ Turn on (n) or off (f) laser emission """
+        if enabled:
+            self.channel1Status = False
+            self._rs232manager.query('ch 1 pow 0.0')                                           # sets Ch1 to Zero 
+            self._rs232manager.query('en 2')
+        else:
+            self.channel1Status = True
+            self._rs232manager.query('di 2')
+            self._rs232manager.query('ch 1 pow '+ str(self.powerLevel))
+        print("analog changed")
     
     def setDigitalModulation(self, enabled):
         """ Turn on (n) or off (f) laser emission """
@@ -96,7 +102,10 @@ class Toptica_iBeam_RS232LaserManager(LaserManager):
             value = 'di'
         cmd = value + ' ext' 
         reply = self._rs232manager.query(cmd)
-        print(reply)           
+        print(reply)     
+        # reply = self._rs232manager.query('sh level pow')
+        # print(reply)
+
 
 # Copyright (C) 2020-2021 ImSwitch developers
 # This file is part of ImSwitch.
