@@ -23,6 +23,10 @@ class ROIInfo:
 class LaserPresetInfo:
     value: float
     """ Laser value. """
+    current: float
+    """ Laser current. """
+    settings: bool
+    
 
 
 @dataclass

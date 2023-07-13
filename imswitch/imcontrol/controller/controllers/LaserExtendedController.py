@@ -172,9 +172,6 @@ class LaserExtendedController(ImConWidgetController):
 
         # Set in setup info
         self._setupInfo.setLaserPreset(name, self.makePreset())
-# # myAdd                                                                         for saving other values
-#         self._setupInfo.setLaserPreset(name, self.makePreset2())
-# # -----------------------------------------------------------------------------
         configfiletools.saveSetupInfo(configfiletools.loadOptions()[0], self._setupInfo)
 
         # Update selected preset in GUI
@@ -244,25 +241,16 @@ class LaserExtendedController(ImConWidgetController):
     def makePreset(self):
         """ Returns a preset object corresponding to the current laser values.
         """
-        return {lName: guitools.LaserPresetInfo(value=self._widget.getValue(lName))
-                for lName, lManager in self._master.lasersManager if not lManager.isBinary}
+        return {lName: guitools.LaserPresetInfo(value=self._widget.getValue(lName), current=self._widget.getCurrent(lName), settings=self._widget.getSettings(lName))              # myAdd
+                for lName, lManager in self._master.lasersManager if not lManager.isBinary
+                }
 
-# # myAdd                                                                         for saving other values
-#     def makePreset2(self):
-#         """ Returns a preset object corresponding to the current laser values.
-#         """
-#         return {lName: guitools.LaserPresetInfo(value=self._widget.getValue(lName))
-#                 for lName, lManager in self._master.lasersManager if not lManager.isBinary}
-# # -----------------------------------------------------------
     def applyPreset(self, laserPreset):
         """ Loads a preset object into the current values. """
         for laserName, laserPresetInfo in laserPreset.items():
             self.setLaserValue(laserName, laserPresetInfo.value)
-
-# # myAdd                                                                         for saving other values           
-#         for laserName, laserPresetInfo in laserPreset.items():
-#             self.setLaserValue(laserName, laserPresetInfo.value)
-# # -----------------------------------------
+            self.setLaserCurrent(laserName, laserPresetInfo.current)              # myAdd
+            self.setLaserSettings(laserName, laserPresetInfo.settings)              # myAdd
 
     def scanChanged(self, isScanning):
         """ Handles what happens when a scan is started/stopped. """
@@ -319,6 +307,19 @@ class LaserExtendedController(ImConWidgetController):
         """ Sets the value of the specified laser, in the units that the laser
         uses. """
         self._widget.setValue(laserName, value)
+
+# myAdd
+    @APIExport(runOnUIThread=True)
+    def setLaserCurrent(self, laserName: str, current: Union[int, float]) -> None:
+        """ Sets the value of the specified laser, in the units that the laser
+        uses. """
+        self._widget.setCurrent(laserName, current)
+
+    @APIExport(runOnUIThread=True)
+    def setLaserSettings(self, laserName: str, settings: bool) -> None:
+        """ Sets the settings of the laser. """
+        self._widget.setSettings(laserName, settings)
+# -------------------------------------------------------
 
     @APIExport()
     def changeScanPower(self, laserName, laserValue):

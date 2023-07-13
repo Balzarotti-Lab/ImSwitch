@@ -105,6 +105,7 @@ class Oxxius_RS232LaserManager(LaserManager):
         reply = self._rs232manager.query(cmd)
         print(cmd)                                                                              # --> remove later
         print(reply)                                                                            # --> remove later
+        print("analog worked")
     
     def setDigitalModulation(self, enabled: bool = False):
         """ Turn on or off digital modulation """
@@ -116,7 +117,7 @@ class Oxxius_RS232LaserManager(LaserManager):
         reply = self._rs232manager.query(cmd)
         print(cmd)                                                                              # --> remove later
         print(reply)     
-        
+        print("digital worked")
 
     
 

@@ -89,9 +89,11 @@ class CoboltDPSS_RS232LaserManager(LaserManager):
             cmd = 'cp'     
         elif selectMode == "ACC":
             cmd = 'ci'
+            print("Acc selected done")
         reply = self._rs232manager.query(cmd)
         print(cmd)                                                                              # --> remove later
         print(reply)                                                                            # --> remove later
+        print()
         return reply
 
     def getPowerPercent(self):

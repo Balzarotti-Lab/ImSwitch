@@ -193,6 +193,16 @@ class LaserExtendedWidget(Widget):
         """ Returns the value of the specified laser, in the units that the
         laser uses. """
         return self.laserModules[laserName].getCurrent()
+    
+    def setSettings(self, laserName, settings):
+        """ Returns the value of the specified laser, in the units that the
+        laser uses. """
+        return self.laserModules[laserName].setSettings(settings)
+
+    def getSettings(self, laserName):
+        """ Returns the value of the specified laser, in the units that the
+        laser uses. """
+        return self.laserModules[laserName].getSettings()
 # -------------------------------------------------
     
     def setModulationFrequency(self, laserName, value):
@@ -598,6 +608,22 @@ class LaserModule(QtWidgets.QWidget):
         """ Returns the value of the laser, in the units that the laser
         uses. """
         return float(self.setPointEdit2.text())
+    
+    def setSettings(self, settings):
+        """ Return Settings. """
+        self.radioA.setChecked(settings["APC"])
+        self.radioB.setChecked(settings["ACC"])
+        self.checkAnalog.setChecked(settings["analog"])
+        self.checkDigital.setChecked(settings["digital"])
+
+
+
+    
+    def getSettings(self):
+        """ Return Settings. """
+        settings = {"APC": self.radioA.isChecked(), "ACC": self.radioB.isChecked(), 
+                    "analog": self.checkAnalog.isChecked(), "digital": self.checkDigital.isChecked()}
+        return settings
 # ------------------------------------------------------
     
     def setModulationFrequency(self, value):
@@ -625,7 +651,7 @@ class LaserModule(QtWidgets.QWidget):
                 self.mincurrent.show()
                 self.slider2.show()
                 self.maxcurrent.show()
-            elif mode == "APC" or mode == "APC (analog only)" or mode == "APC (no modulation)": 
+            elif mode == "APC" or mode == "APC (analog only)": 
                 self.setPointLabel2.hide()
                 self.setPointEdit2.hide()
                 self.mincurrent.hide()
@@ -637,16 +663,6 @@ class LaserModule(QtWidgets.QWidget):
                 self.slider.show()
                 self.maxpower.show()
         
-# ----------------------------------------------------------
-# myAdd                                                            # for further implementation ?
-    # def setOperatingMode(self, item):
-    #     """ Sets operating mode of laser. """
-    #     self.opModeList.setItemData(item)
-
-    # def setOperatingMode2(self):
-    #     """ Sets operating mode of laser. """
-    #     self.showCheck.setEnabled()
-#-----------------------------------------------------
 
 
 # Copyright (C) 2017 Federico Barabas 2020-2021 ImSwitch developers
