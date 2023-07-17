@@ -21,7 +21,6 @@ class Toptica_iBeam_RS232LaserManager(LaserManager):
         self.setAnalogModulation(False)
         self.setDigitalModulation(False)
        
-
     def getFirmware(self):
         """ Gets firmware """
         cmd = 'ver'
@@ -102,7 +101,8 @@ class Toptica_iBeam_RS232LaserManager(LaserManager):
             value = 'di'
         cmd = value + ' ext' 
         reply = self._rs232manager.query(cmd)
-        print(reply)     
+        print(reply)
+        print("digital changed")     
         # reply = self._rs232manager.query('sh level pow')
         # print(reply)
 

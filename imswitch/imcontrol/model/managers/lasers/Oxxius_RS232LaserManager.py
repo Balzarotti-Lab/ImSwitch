@@ -25,11 +25,11 @@ class Oxxius_RS232LaserManager(LaserManager):
         print(reply)                                                                                # --> remove later
         return reply
 
-    def setOperatingMode(self, selectMode: str = "APC (analog only)"):                            # uses "a" as default mode (at the moment)
+    def setOperatingMode(self, selectMode: bool = True):                            # uses "a" as default mode (at the moment)
         """ Sets potential operating mode """                                                                       # --> remove later
-        if selectMode == "APC (analog only)":
+        if selectMode == True:
             cmd = 'APC=1'     
-        elif selectMode == "ACC":
+        elif selectMode == False:
             cmd = 'ACC=1'
         reply = self._rs232manager.query(cmd)
         print(cmd)                                                                              # --> remove later
@@ -99,8 +99,10 @@ class Oxxius_RS232LaserManager(LaserManager):
         """ Turn on or off analog modulation """
         if enabled:
             value = "1"
+            print("analog 1")
         else:
             value = "0"
+            print("analog 0")
         cmd = 'AM=' + value
         reply = self._rs232manager.query(cmd)
         print(cmd)                                                                              # --> remove later
@@ -111,8 +113,10 @@ class Oxxius_RS232LaserManager(LaserManager):
         """ Turn on or off digital modulation """
         if enabled:
             value = "1"
+            print("digital 1")
         else:
             value = "0"
+            print("digital 0")
         cmd = 'TTL=' + value
         reply = self._rs232manager.query(cmd)
         print(cmd)                                                                              # --> remove later

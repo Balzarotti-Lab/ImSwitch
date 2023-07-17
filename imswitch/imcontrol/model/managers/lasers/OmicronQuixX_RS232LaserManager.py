@@ -35,7 +35,7 @@ class OmicronQuixX_RS232LaserManager(LaserManager):
         print(reply)                                                                                # --> remove later
         return reply
 
-    def setOperatingMode(self, selectMode: str = "APC (no modulation)"):                            # default mode (at the moment)
+    def setOperatingMode(self, selectMode: bool = True):                            # default mode (at the moment)
         """ Sets operating mode (see table) by using a 16bit-chain as Hex-Code,
             starting with Bit 15 and ending with Bit 0,
             example: 1000 0000 0001 1000 -->in hex: 8018,
@@ -43,9 +43,9 @@ class OmicronQuixX_RS232LaserManager(LaserManager):
         hexa = self.getOperatingMode()
         if hexa == None: return                             # used for Mocker                                                                       # --> remove later
         elif hexa[:4] == "!GOM":                  # verifies correct answer commamnd from laser
-            if selectMode == "APC (no modulation)":
+            if selectMode == True:
                 hexaMod = self.modifyHex(hexa[4:], 7, '1')     # Hex, Index (0 - 15), Bit (0 or 1) as string
-            elif selectMode == "ACC":
+            elif selectMode == False:
                 hexaMod = self.modifyHex(hexa[4:], 7, '0')
         else:
             print("Error while checking operating mode")                    # --> remove later or change to an error logger

@@ -83,11 +83,11 @@ class CoboltDPSS_RS232LaserManager(LaserManager):
         print(cmd)                                                                              # --> remove later
         print(reply)
 
-    def setOperatingMode(self, selectMode: str = "APC"):                            # uses "a" as default mode (at the moment)
+    def setOperatingMode(self, selectMode: bool = True):                            # uses "a" as default mode (at the moment)
         """ Sets potential operating mode """                                                                       # --> remove later
-        if selectMode == "APC":
+        if selectMode == True:
             cmd = 'cp'     
-        elif selectMode == "ACC":
+        elif selectMode == False:
             cmd = 'ci'
             print("Acc selected done")
         reply = self._rs232manager.query(cmd)

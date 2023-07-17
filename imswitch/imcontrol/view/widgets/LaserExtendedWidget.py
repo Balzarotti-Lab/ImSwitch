@@ -24,7 +24,7 @@ class LaserExtendedWidget(Widget):
 
 # myAdd
     sigOpModeSelected = QtCore.Signal(str, str)
-    sigRadioButtonToggled = QtCore.Signal(str, str)
+    sigRadioButtonToggled = QtCore.Signal(str, bool)
     sigAnalogClicked = QtCore.Signal(str, bool)
     sigDigitalClicked = QtCore.Signal(str, bool)
     sigCurrentChanged = QtCore.Signal(str, float)  # (laserName, current)
@@ -291,7 +291,7 @@ class LaserModule(QtWidgets.QWidget):
 
 # myAdd
     sigOpModeSelected = QtCore.Signal(str)
-    sigRadioButtonToggled = QtCore.Signal(str)
+    sigRadioButtonToggled = QtCore.Signal(bool)
     sigAnalogClicked = QtCore.Signal(bool)
     sigDigitalClicked = QtCore.Signal(bool)
 
@@ -390,36 +390,29 @@ class LaserModule(QtWidgets.QWidget):
             self.checkDigital.setEnabled(False)
         self.checkDigital.toggled.connect(self.sigDigitalClicked)
         
-        # if "exclusive" in modulation:
-        #     self.checkAnalog.clicked.connect(lambda:self.checkDigital.setChecked(False))
-        #     self.checkDigital.clicked.connect(lambda:self.checkAnalog.setChecked(False))
-        
-        if "APC (no modulation)" in opMode:                                                              # feature just for QuixX Laser
-            self.checkAnalog.setEnabled(False)
-            self.checkDigital.setEnabled(False)
-        if "APC (analog only)" in opMode:                                                              # feature just for Oxxius Laser
-            self.checkDigital.setEnabled(False)
-
-        # if not opMode == "no operating mode":
         self.radioA = QtWidgets.QRadioButton(opMode[0])
         self.radioA.setChecked(True)
         self.radioB = QtWidgets.QRadioButton(opMode[1])
-        self.radioA.clicked.connect(
-            lambda: self.sigRadioButtonToggled.emit(self.radioA.text()))
-        self.radioB.clicked.connect(
-            lambda: self.sigRadioButtonToggled.emit(self.radioB.text()))
+
+        self.radioA.toggled.connect(self.sigRadioButtonToggled)
+        # self.radioB.toggled.connect(
+        #     lambda: self.sigRadioButtonToggled.emit(self.radioB.text()))
         
+        # Exceptions
         if "APC (no modulation)" in opMode:                                                               # feature just for QuixX Laser
-            self.radioA.clicked.connect(lambda: self.checkAnalog.setEnabled(False))
-            self.radioA.clicked.connect(lambda: self.checkAnalog.setChecked(False))
-            self.radioA.clicked.connect(lambda: self.checkDigital.setEnabled(False))
-            self.radioA.clicked.connect(lambda: self.checkDigital.setChecked(False))
-            self.radioB.clicked.connect(lambda: self.checkAnalog.setEnabled(True))
-            self.radioB.clicked.connect(lambda: self.checkDigital.setEnabled(True))
+            self.checkAnalog.setEnabled(False)
+            self.checkDigital.setEnabled(False)
+            self.radioA.toggled.connect(lambda: self.checkAnalog.setEnabled(False))
+            self.radioA.toggled.connect(lambda: self.checkAnalog.setChecked(False))
+            self.radioA.toggled.connect(lambda: self.checkDigital.setEnabled(False))
+            self.radioA.toggled.connect(lambda: self.checkDigital.setChecked(False))
+            self.radioB.toggled.connect(lambda: self.checkAnalog.setEnabled(True))
+            self.radioB.toggled.connect(lambda: self.checkDigital.setEnabled(True))
         if "APC (analog only)" in opMode:                                                               # feature just for Oxxius Laser
-            self.radioA.clicked.connect(lambda: self.checkDigital.setEnabled(False))
-            self.radioA.clicked.connect(lambda: self.checkDigital.setChecked(False))
-            self.radioB.clicked.connect(lambda: self.checkDigital.setEnabled(True))
+            self.checkDigital.setEnabled(False)
+            self.radioA.toggled.connect(lambda: self.checkDigital.setEnabled(False))
+            self.radioA.toggled.connect(lambda: self.checkDigital.setChecked(False))
+            self.radioB.toggled.connect(lambda: self.checkDigital.setEnabled(True))
         if "no operating mode" in opMode:
             self.radioA.setEnabled(False)
             self.radioB.setEnabled(False)
@@ -616,9 +609,6 @@ class LaserModule(QtWidgets.QWidget):
         self.checkAnalog.setChecked(settings["analog"])
         self.checkDigital.setChecked(settings["digital"])
 
-
-
-    
     def getSettings(self):
         """ Return Settings. """
         settings = {"APC": self.radioA.isChecked(), "ACC": self.radioB.isChecked(), 
@@ -640,7 +630,7 @@ class LaserModule(QtWidgets.QWidget):
     def toggleSlider(self, mode):
         if not self.currentLimits == -1:  
             print("mode ", mode)
-            if mode == "ACC":
+            if mode == False:
                 self.setPointLabel.hide()
                 self.setPointEdit.hide()
                 self.minpower.hide()
@@ -651,7 +641,7 @@ class LaserModule(QtWidgets.QWidget):
                 self.mincurrent.show()
                 self.slider2.show()
                 self.maxcurrent.show()
-            elif mode == "APC" or mode == "APC (analog only)": 
+            elif mode == True: 
                 self.setPointLabel2.hide()
                 self.setPointEdit2.hide()
                 self.mincurrent.hide()
