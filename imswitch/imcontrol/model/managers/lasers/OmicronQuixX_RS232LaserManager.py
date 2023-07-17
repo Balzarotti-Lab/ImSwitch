@@ -15,9 +15,12 @@ class OmicronQuixX_RS232LaserManager(LaserManager):
         
         self.getFirmware() 
         self.deactAdHocMode()
-        self.setOperatingMode()
+        self.setOperatingMode(True)
+        self.setAnalogModulation(False)
+        self.setDigitalModulation(False)
         self.setAnalogImpedance()           # set to 0...1V (could be uncommented and last status of Omicron Control Center will be used)
         self.setDigitalImpedance()          # set to 0...5V (could be uncommented and last status of Omicron Control Center will be used)
+
 
     def getFirmware(self):
         """ Gets firmware and sets delimiter to '|', 
@@ -35,7 +38,7 @@ class OmicronQuixX_RS232LaserManager(LaserManager):
         print(reply)                                                                                # --> remove later
         return reply
 
-    def setOperatingMode(self, selectMode: bool = True):                            # default mode (at the moment)
+    def setOperatingMode(self, selectMode: bool = True):                            # default mode is APC
         """ Sets operating mode (see table) by using a 16bit-chain as Hex-Code,
             starting with Bit 15 and ending with Bit 0,
             example: 1000 0000 0001 1000 -->in hex: 8018,
@@ -85,6 +88,7 @@ class OmicronQuixX_RS232LaserManager(LaserManager):
         value = round(power)         # assuming input value is [0,1023]
         cmd = '?SPP' + str(value)
         reply = self._rs232manager.query(cmd)
+        print(cmd)
         print(reply)                                                                            # --> remove later
     
     def setCurrent(self, current):    # (setPowerPercent)
@@ -123,14 +127,15 @@ class OmicronQuixX_RS232LaserManager(LaserManager):
         elif hexa[:4] == "!GOM":                       
             if enabled:
                 hexaMod = self.modifyHex(hexa[4:], 8, '1')      # Hexadecimal, Index:8 is Bit7, Bit (0 or 1) as string (see setOperatingMode)
+                print("analog enabled")
             else:
                 hexaMod = self.modifyHex(hexa[4:], 8, '0')
+                print("analog disabled")
         else:
             print("Error while checking operating mode")                    # --> remove later or change to an error logger
             return
         cmd = '?SOM' + hexaMod
         reply = self._rs232manager.query(cmd)
-        print("analog changed")
         print(reply)                                                                            # --> remove later
 
     def setDigitalModulation(self, enabled):
@@ -139,14 +144,15 @@ class OmicronQuixX_RS232LaserManager(LaserManager):
         elif hexa[:4] == "!GOM":      
             if enabled:
                 hexaMod = self.modifyHex(hexa[4:], 10, '1')      # Hexadecimal, Index:10 is Bit5, Bit (0 or 1) as string (see setOperatingMode)
+                print("digital enabled")
             else:
                 hexaMod = self.modifyHex(hexa[4:], 10, '0')
+                print("digital disabled")
         else:
             print("Error while checking operating mode")                    # --> remove later or change to an error logger
             return
         cmd = '?SOM' + hexaMod
         reply = self._rs232manager.query(cmd)
-        print("digital changed")
         print(reply)                                                                            # --> remove later
     
     def setAnalogImpedance(self):  

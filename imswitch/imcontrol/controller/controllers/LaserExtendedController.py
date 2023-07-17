@@ -63,10 +63,9 @@ class LaserExtendedController(ImConWidgetController):
         self._widget.sigPresetScanDefaultToggled.connect(self.presetScanDefaultToggled)
 
 # myAdd
-        # self._widget.sigOpModeSelected.connect(self.toggleOpMode)
         self._widget.sigRadioButtonToggled.connect(self.toggleOpMode)
-        self._widget.sigAnalogClicked.connect(self.toggleAnalog)
-        self._widget.sigDigitalClicked.connect(self.toggleDigital)
+        self._widget.sigAnalogToggled.connect(self.toggleAnalog)
+        self._widget.sigDigitalToggled.connect(self.toggleDigital)
 
         self._widget.sigCurrentChanged.connect(self.currentChanged)
 # --------------------------------------------------
@@ -76,6 +75,7 @@ class LaserExtendedController(ImConWidgetController):
         self._master.lasersManager.execOnAll(lambda l: l.setValue(0))
 # myAdd
         self._master.lasersManager.execOnAll(lambda l: l.setCurrent(0))
+        self._master.lasersManager.execOnAll(lambda l: l.setEnabled(False))
 # --------------------------------------------------
 
     def toggleLaser(self, laserName, enabled):
@@ -86,8 +86,7 @@ class LaserExtendedController(ImConWidgetController):
 # myAdd
     def toggleOpMode(self, laserName, selectMode):
         """ Toggle operating mode."""
-        reply = self._master.lasersManager[laserName].setOperatingMode(selectMode)
-        print(reply)
+        self._master.lasersManager[laserName].setOperatingMode(selectMode)
         self._widget.toggleSlider(laserName, selectMode)
         self.setSharedAttr(laserName, _opMode, selectMode)                  #????? important?
 
@@ -96,7 +95,6 @@ class LaserExtendedController(ImConWidgetController):
         self._master.lasersManager[laserName].setAnalogModulation(enabled)
         # if "exclusive" in self._master.lasersManager[laserName].modulation:               # moeglichkeit zur kommunikation zu Widget
         #     self._widget.irgendeineFunktionimWidget(False)
-        # else: print("no exclusive")
         self.setSharedAttr(laserName, _analogAttr, enabled)                      #????? important?
 
     def toggleDigital(self, laserName, enabled):
@@ -348,16 +346,14 @@ class LaserExtendedController(ImConWidgetController):
 
         return returnmessage
 
-# myAdd
-_attrCategory = 'Laser'                                      # original just 'Laser', maybe not necessary to change
-# --------------------------------------
+_attrCategory = 'Laser'                                     
 _enabledAttr = 'Enabled'
 _valueAttr = 'Value'
 _freqEnAttr = "ModulationEnabled"
 _freqAttr = "Frequency"
 _dcAttr = "DutyCycle"
 
-# myAdd                                                                 # ???????????????????///
+# myAdd                                                                 # ??????????????????
 _opMode = 'SelectedMode'
 _analogAttr = 'AnalogMod'
 _digitalAttr = 'DigitalMod'

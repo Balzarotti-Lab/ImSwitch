@@ -16,7 +16,7 @@ class CoboltDPSS_RS232LaserManager(LaserManager):
         
         self.getFirmware() 
         self.deactAutoStart()
-        # self.setOperatingMode()
+        self.setOperatingMode(True)
 
     def getFirmware(self):
         """ Gets firmware and sets delimiter to '|', 
@@ -26,27 +26,6 @@ class CoboltDPSS_RS232LaserManager(LaserManager):
         reply = self._rs232manager.query(cmd)
         print(reply)                                                                                # --> remove later
         return reply
-
-    # def getOperatingMode(self):
-    #     """ Returns the selected frequency of the laser. """
-    #     cmd = ''
-    #     return self._rs232manager.query(cmd)
-
-    # def setOperatingMode(self, selectMode: str = "a"):                            # uses "a" as default mode (at the moment)
-    #     """ Sets potential operating mode """                                                                       # --> remove later
-
-    #     if selectMode == "a":
-    #         cmd = 'a'     
-    #     elif selectMode == "b":
-    #         cmd = 'b'
-    #     elif selectMode == "c":
-    #         cmd = 'c'
-    #     else: cmd = ''
-
-    #     reply = self._rs232manager.query(cmd)
-    #     print(cmd)                                                                              # --> remove later
-    #     print(reply)                                                                            # --> remove later
-    #     return reply
         
     def deactAutoStart(self):  
         """ Disables Autostart """
@@ -83,17 +62,17 @@ class CoboltDPSS_RS232LaserManager(LaserManager):
         print(cmd)                                                                              # --> remove later
         print(reply)
 
-    def setOperatingMode(self, selectMode: bool = True):                            # uses "a" as default mode (at the moment)
+    def setOperatingMode(self, selectMode):                            # uses "a" as default mode (at the moment)
         """ Sets potential operating mode """                                                                       # --> remove later
         if selectMode == True:
             cmd = 'cp'     
+            print("Apc selected done")
         elif selectMode == False:
             cmd = 'ci'
             print("Acc selected done")
         reply = self._rs232manager.query(cmd)
         print(cmd)                                                                              # --> remove later
         print(reply)                                                                            # --> remove later
-        print()
         return reply
 
     def getPowerPercent(self):

@@ -15,40 +15,19 @@ class Toptica_iBeam_RS232LaserManager(LaserManager):
        
         super().__init__(laserInfo, name, isBinary=False, valueUnits='mW', valueDecimals=0, isModulated = True)
 
-        self.getFirmware()
         self.powerLevel = 0.0
         self.channel1Status = True
+        self.getFirmware()
         self.setAnalogModulation(False)
         self.setDigitalModulation(False)
        
+
     def getFirmware(self):
         """ Gets firmware """
         cmd = 'ver'
         reply = self._rs232manager.query(cmd)
         print(reply)                                                                                # --> remove later
         return reply
-        
-    def enableChannel2(self):  
-        """ Enables Channel 2 """
-        cmd = 'ch 1 pow 0.0'        # sets Ch1 to Zero 
-        self._rs232manager.query(cmd)
-        cmd = 'en 2'
-        reply = self._rs232manager.query(cmd)
-        print(reply)      
-        
-    # def toggleChannel(self, channel):  
-    #     """ toogle Channel """
-    #     cmd = 'ch 1 pow 0.0'        # sets Ch1 to Zero 
-    #     self._rs232manager.query(cmd)
-    #     cmd = 'en 2'
-    #     reply = self._rs232manager.query(cmd)
-    #     print(reply)                                                                        # --> remove later
-
-    # def disableChannel2(self):  
-    #     """ disables Channel 2 """
-    #     cmd = 'di 2'
-    #     reply = self._rs232manager.query(cmd)
-    #     print(reply)         
 
     def setEnabled(self, enabled):
         """ Turn on (n) or off (f) laser emission """
@@ -86,12 +65,12 @@ class Toptica_iBeam_RS232LaserManager(LaserManager):
         if enabled:
             self.channel1Status = False
             self._rs232manager.query('ch 1 pow 0.0')                                           # sets Ch1 to Zero 
-            self._rs232manager.query('en 2')
+            reply = self._rs232manager.query('en 2')
         else:
             self.channel1Status = True
             self._rs232manager.query('di 2')
-            self._rs232manager.query('ch 1 pow '+ str(self.powerLevel))
-        print("analog changed")
+            reply = self._rs232manager.query('ch 1 pow '+ str(self.powerLevel))
+            print(reply)
     
     def setDigitalModulation(self, enabled):
         """ Turn on (n) or off (f) laser emission """
@@ -101,10 +80,7 @@ class Toptica_iBeam_RS232LaserManager(LaserManager):
             value = 'di'
         cmd = value + ' ext' 
         reply = self._rs232manager.query(cmd)
-        print(reply)
-        print("digital changed")     
-        # reply = self._rs232manager.query('sh level pow')
-        # print(reply)
+        print(reply)    
 
 
 # Copyright (C) 2020-2021 ImSwitch developers
