@@ -9,12 +9,12 @@ from ctypes import *
 # Blink_C_wrapper.dll, Blink_SDK.dll, ImageGen.dll, FreeImage.dll and wdapi1021.dll
 # should all be located in the same directory as the program referencing the
 # library
-cdll.LoadLibrary("C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\SDK\\Blink_C_wrapper")
-slm_lib = CDLL("Blink_C_wrapper")
+# cdll.LoadLibrary("C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\SDK\\Blink_C_wrapper")
+# slm_lib = CDLL("Blink_C_wrapper")
 
 # Open the image generation library
-cdll.LoadLibrary("C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\SDK\\ImageGen")   # not needed at the moment
-image_lib = CDLL("ImageGen")
+# cdll.LoadLibrary("C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\SDK\\ImageGen")   # not needed at the moment
+# image_lib = CDLL("ImageGen")
 
 # Basic parameters for calling Create_SDK
 bit_depth = c_uint(12)
@@ -57,7 +57,7 @@ class App(QWidget):
         self.slm_size = 1024
         self.view_size = 400
         self.view_img = self.blankBitmap()
-        self.init_SLMController()
+        # self.init_SLMController()
         self.initUI()
 
     def initUI(self):
@@ -146,24 +146,25 @@ class App(QWidget):
             self.label.setPixmap(image.scaled(self.view_size, self.view_size))
             
     def uploadMask(self):
-        #write image returns on DMA complete, ImageWriteComplete returns when the hardware
-        #image buffer is ready to receive the next image. Breaking this into two functions is 
-        #useful for external triggers. It is safe to apply a trigger when Write_image is complete
-        #and it is safe to write a new image when ImageWriteComplete returns
-        retVal = slm_lib.Write_image(board_number, self.upload_img.ctypes.data_as(POINTER(c_ubyte)),
-                                     self.height_.value*self.width_.value*self.bytes.value, wait_For_Trigger,
-                                     flip_immediate, OutputPulseImageFlip, OutputPulseImageRefresh, timeout_ms)
+        pass
+        # #write image returns on DMA complete, ImageWriteComplete returns when the hardware
+        # #image buffer is ready to receive the next image. Breaking this into two functions is 
+        # #useful for external triggers. It is safe to apply a trigger when Write_image is complete
+        # #and it is safe to write a new image when ImageWriteComplete returns
+        # retVal = slm_lib.Write_image(board_number, self.upload_img.ctypes.data_as(POINTER(c_ubyte)),
+        #                              self.height_.value*self.width_.value*self.bytes.value, wait_For_Trigger,
+        #                              flip_immediate, OutputPulseImageFlip, OutputPulseImageRefresh, timeout_ms)
 
-        if (retVal == -1):
-            print ("Upload/Communication to SLM failed")
-            slm_lib.Delete_SDK()
-        else:
-            #check the buffer is ready to receive the next image
-            print("upload")                                                                          
-            retVal = slm_lib.ImageWriteComplete(board_number, timeout_ms)
-            if(retVal == -1):
-                print ("ImageWriteComplete failed, trigger never received?")
-                slm_lib.Delete_SDK()
+        # if (retVal == -1):
+        #     print ("Upload/Communication to SLM failed")
+        #     slm_lib.Delete_SDK()
+        # else:
+        #     #check the buffer is ready to receive the next image
+        #     print("upload")                                                                          
+        #     retVal = slm_lib.ImageWriteComplete(board_number, timeout_ms)
+        #     if(retVal == -1):
+        #         print ("ImageWriteComplete failed, trigger never received?")
+        #         slm_lib.Delete_SDK()
 
     def closeEvent(self, event):
         
