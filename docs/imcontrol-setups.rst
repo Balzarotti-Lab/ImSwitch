@@ -92,6 +92,10 @@ Item types that may be included
    :members:
    :inherited-members:
 
+.. autoclassconheader:: imswitch.imcontrol.model.SetupInfo.SLM_PCIeInfo
+   :members:
+   :inherited-members:
+
 .. autoclassconheader:: imswitch.imcontrol.model.SetupInfo.FocusLockInfo
    :members:
    :inherited-members:
