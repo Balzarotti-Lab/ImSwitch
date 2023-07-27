@@ -108,7 +108,7 @@ class App(QWidget):
             self.center_x = c_uint(self.width_.value//2)
             self.center_y = c_uint(self.height_.value//2)
 
-            # Loading LUTs: Controller keeps last used LUT (at least it was not turned off)
+            # Loading LUTs: Controller keeps last used LUT
             # slm_lib.Load_LUT_file(board_number, b"C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\LUT Files\\1024x1024_linearVoltage.LUT")     
             # slm_lib.Load_LUT_file(board_number, b"C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\LUT Files\\slm6517_at635_75C.LUT")
             # slm_lib.Load_LUT_file(board_number, b"C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\LUT Files\\slm6517_at635_30C.LUT")
