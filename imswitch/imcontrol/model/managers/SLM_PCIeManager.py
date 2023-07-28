@@ -69,9 +69,8 @@ class SLM_PCIeManager(SignalInterface):
         self.__pixelsize = self.__slm_PCIeInfo.pixelSize
         self.__slmSize = (self.__slm_PCIeInfo.width, self.__slm_PCIeInfo.height)
         self.__correctionPatternsDir = self.__slm_PCIeInfo.correctionPatternsDir
-        self.__maskLeft = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2), self.__wavelength)
-        self.__maskRight = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2), self.__wavelength)
-        self.__masks = [self.__maskLeft, self.__maskRight]
+        self.__maskLeft = Mask(self.__slmSize[1], int(self.__slmSize[0]), self.__wavelength)
+        self.__masks = [self.__maskLeft]
 
         self.initCorrectionMask()
         self.initTiltMask()
@@ -81,8 +80,8 @@ class SLM_PCIeManager(SignalInterface):
         self.init_SLMController()
 # ------------------------------------------------
 
-        self.__masksAber = [self.__maskAberLeft, self.__maskAberRight]
-        self.__masksTilt = [self.__maskTiltLeft, self.__maskTiltRight]
+        self.__masksAber = [self.__maskAberLeft]
+        self.__masksTilt = [self.__maskTiltLeft]
 
         self.update(maskChange=True, tiltChange=True, aberChange=True)
 
@@ -181,21 +180,21 @@ class SLM_PCIeManager(SignalInterface):
 
     def initTiltMask(self):
         # Add blazed grating tilting mask
-        self.__maskTiltLeft = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2),
+        self.__maskTiltLeft = Mask(self.__slmSize[1], int(self.__slmSize[0]),
                                    self.__wavelength)
         self.__maskTiltLeft.setTilt(self.__pixelsize)
-        self.__maskTiltRight = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2),
-                                    self.__wavelength)
-        self.__maskTiltRight.setTilt(self.__pixelsize)
+        # self.__maskTiltRight = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2),
+        #                             self.__wavelength)
+        # self.__maskTiltRight.setTilt(self.__pixelsize)
 
     def initAberrationMask(self):
         # Add blazed grating tilting mask
-        self.__maskAberLeft = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2),
+        self.__maskAberLeft = Mask(self.__slmSize[1], int(self.__slmSize[0]),
                                    self.__wavelength)
         self.__maskAberLeft.setBlack()
-        self.__maskAberRight = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2),
-                                    self.__wavelength)
-        self.__maskAberRight.setBlack()
+        # self.__maskAberRight = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2),
+        #                             self.__wavelength)
+        # self.__maskAberRight.setBlack()
 
     def setMask(self, mask, maskMode):
         if self.__masks[mask].mask_type == MaskMode.Black and maskMode != MaskMode.Black:
@@ -234,8 +233,7 @@ class SLM_PCIeManager(SignalInterface):
         self.__masksAber[mask].moveCenter(move_v)
 
     def getCenters(self):
-        centerCoords = {"left": self.__masks[0].getCenter(),
-                        "right": self.__masks[1].getCenter()}
+        centerCoords = {"left": self.__masks[0].getCenter()}
         return centerCoords
 
     def setCenters(self, centerCoords):
@@ -243,8 +241,6 @@ class SLM_PCIeManager(SignalInterface):
                                                              self.__masksAber)):
             if idx == 0:
                 center = (centerCoords["left"]["xcenter"], centerCoords["left"]["ycenter"])
-            elif idx == 1:
-                center = (centerCoords["right"]["xcenter"], centerCoords["right"]["ycenter"])
             mask.setCenter(center)
             masktilt.setCenter(center)
             maskaber.setCenter(center)
@@ -258,18 +254,12 @@ class SLM_PCIeManager(SignalInterface):
     def setAberrationFactors(self, aber_info):
         lAberFactors = aber_info["left"]
         self.__masksAber[0].setAberrationFactors(lAberFactors)
-        rAberFactors = aber_info["right"]
-        self.__masksAber[1].setAberrationFactors(rAberFactors)
 
     def setAberrations(self, aber_info, mask):
         if mask == 0 or mask == None:
             lAberFactors = aber_info["left"]
             self.__masksAber[0].setAberrationFactors(lAberFactors)
             self.__masksAber[0].setAberrations()
-        if mask == 1 or mask == None:
-            rAberFactors = aber_info["right"]
-            self.__masksAber[1].setAberrationFactors(rAberFactors)
-            self.__masksAber[1].setAberrations()
 
     def setRadius(self, radius):
         for mask, masktilt, maskaber in zip(self.__masks, self.__masksTilt, self.__masksAber):
@@ -292,11 +282,11 @@ class SLM_PCIeManager(SignalInterface):
 
     def update(self, maskChange=False, tiltChange=False, aberChange=False):
         if maskChange:
-            self.maskDouble = self.__masks[0].concat(self.__masks[1])
+            self.maskDouble = self.__masks[0]
         if tiltChange:
-            self.maskTilt = self.__masksTilt[0].concat(self.__masksTilt[1])
+            self.maskTilt = self.__masksTilt[0]
         if aberChange:
-            self.maskAber = self.__masksAber[0].concat(self.__masksAber[1])
+            self.maskAber = self.__masksAber[0]
         self.maskCombined = self.maskDouble + self.maskAber + self.maskTilt + self.__maskCorrection
         self.sigSLMMaskUpdated.emit(self.maskCombined)
 
@@ -341,7 +331,7 @@ class Mask:
         for mask in [self, maskOther]:
             mask.updateImage()
             mask.setCircular()
-        maskCombined = Mask(self.height, self.width * 2, self.wavelength)
+        maskCombined = Mask(self.height, self.width, self.wavelength)
         imgCombined = np.concatenate((self.img, maskOther.img), axis=1)
         maskCombined.loadArray(imgCombined)
         return maskCombined
@@ -644,7 +634,7 @@ class Direction(enum.Enum):
 
 class MaskChoice(enum.Enum):
     Left = 0
-    Right = 1
+ 
 
 
 # Copyright (C) 2020-2021 ImSwitch developers

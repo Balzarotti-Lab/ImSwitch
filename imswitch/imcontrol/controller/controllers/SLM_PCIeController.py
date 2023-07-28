@@ -140,7 +140,7 @@ class SLM_PCIeController(ImConWidgetController):
 
         if aberParams is not None:
             # create dict for aberration params
-            masknames = ["left", "right"]
+            masknames = ["left"]
             aberparamnames = ["tilt", "tip", "defocus", "spherical", "verticalComa",
                               "horizontalComa", "verticalAstigmatism", "obliqueAstigmatism"]
             state_aber = dict.fromkeys(masknames)
@@ -201,7 +201,7 @@ class SLM_PCIeController(ImConWidgetController):
                 float(state_general[generalparamname])
             )
 
-        masknames = ["left", "right"]
+        masknames = ["left"]
         aberparamnames = ["tilt", "tip", "defocus", "spherical", "verticalComa", "horizontalComa",
                           "verticalAstigmatism", "obliqueAstigmatism"]
         for maskname in masknames:
