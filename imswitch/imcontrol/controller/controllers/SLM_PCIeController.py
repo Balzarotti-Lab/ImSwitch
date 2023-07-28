@@ -91,11 +91,8 @@ class SLM_PCIeController(ImConWidgetController):
             img = arr
 
         self._widget.updateSLMDisplay(img)
-
-
 # myAdd
-        self._master.slm_PCIeManager.upload_img(img)
-        
+        self._master.slm_PCIeManager.upload_img(img)                                # change for SLM-PCIe
 # ----------------------------------------
 
 
@@ -140,7 +137,7 @@ class SLM_PCIeController(ImConWidgetController):
 
         if aberParams is not None:
             # create dict for aberration params
-            masknames = ["left"]
+            masknames = ["left", "right"]
             aberparamnames = ["tilt", "tip", "defocus", "spherical", "verticalComa",
                               "horizontalComa", "verticalAstigmatism", "obliqueAstigmatism"]
             state_aber = dict.fromkeys(masknames)
@@ -201,7 +198,7 @@ class SLM_PCIeController(ImConWidgetController):
                 float(state_general[generalparamname])
             )
 
-        masknames = ["left"]
+        masknames = ["left", "right"]
         aberparamnames = ["tilt", "tip", "defocus", "spherical", "verticalComa", "horizontalComa",
                           "verticalAstigmatism", "obliqueAstigmatism"]
         for maskname in masknames:

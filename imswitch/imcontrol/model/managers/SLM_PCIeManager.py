@@ -11,15 +11,10 @@ from imswitch.imcommon.framework import Signal, SignalInterface
 from imswitch.imcommon.model import initLogger
 
 # myAdd
-
 from ctypes import *
 from imswitch.imcommon.model.dirtools import _baseDataFilesDir
-print(_baseDataFilesDir)
 cdll.LoadLibrary(_baseDataFilesDir + "\\libs\\slm_PCIe\\Blink_C_wrapper")
 slm_lib = CDLL("Blink_C_wrapper")
-
-# cdll.LoadLibrary(_baseDataFilesDir + "\\libs\\slm_PCIe\\ImageGen")   # not needed at the moment    # image generation won't be used from the SDK
-# image_lib = CDLL("ImageGen")
 
 # Basic parameters for calling Create_SDK
 bit_depth = c_uint(12)
@@ -46,14 +41,6 @@ OutputPulseImageRefresh = c_uint(0); #only supported on 1920x1152, FW rev 1.8.
 # ---------------------------------------------------------------
 
 
-
-
-
-
-
-
-
-
 class SLM_PCIeManager(SignalInterface):
     sigSLMMaskUpdated = Signal(object)  # (maskCombined)
 
@@ -69,8 +56,9 @@ class SLM_PCIeManager(SignalInterface):
         self.__pixelsize = self.__slm_PCIeInfo.pixelSize
         self.__slmSize = (self.__slm_PCIeInfo.width, self.__slm_PCIeInfo.height)
         self.__correctionPatternsDir = self.__slm_PCIeInfo.correctionPatternsDir
-        self.__maskLeft = Mask(self.__slmSize[1], int(self.__slmSize[0]), self.__wavelength)
-        self.__masks = [self.__maskLeft]
+        self.__maskLeft = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2), self.__wavelength)
+        self.__maskRight = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2), self.__wavelength)
+        self.__masks = [self.__maskLeft, self.__maskRight]
 
         self.initCorrectionMask()
         self.initTiltMask()
@@ -80,8 +68,8 @@ class SLM_PCIeManager(SignalInterface):
         self.init_SLMController()
 # ------------------------------------------------
 
-        self.__masksAber = [self.__maskAberLeft]
-        self.__masksTilt = [self.__maskTiltLeft]
+        self.__masksAber = [self.__maskAberLeft, self.__maskAberRight]
+        self.__masksTilt = [self.__maskTiltLeft, self.__maskTiltRight]
 
         self.update(maskChange=True, tiltChange=True, aberChange=True)
 
@@ -110,10 +98,10 @@ class SLM_PCIeManager(SignalInterface):
                 # slm_lib.Load_LUT_file(board_number, b"C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\LUT Files\\slm6517_at635_75C.LUT")
                 # slm_lib.Load_LUT_file(board_number, b"C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\LUT Files\\slm6517_at635_30C.LUT")
             
-                # Create a vector to hold values for a SLM image, and fill the wavefront correction with a blank
+                # Create a vector to hold values for a SLM image
                 blank_img = np.zeros([self.width_.value*self.height_.value*self.bytes.value], np.uint8, 'C')
                 
-                # Write a blank pattern to the SLM to get going
+                # Writes a blank pattern to the SLM
                 retVal = slm_lib.Write_image(board_number, blank_img.ctypes.data_as(POINTER(c_ubyte)),
                                             self.height_.value*self.width_.value*self.bytes.value, wait_For_Trigger,
                                             flip_immediate, OutputPulseImageFlip, OutputPulseImageRefresh, timeout_ms)
@@ -128,12 +116,8 @@ class SLM_PCIeManager(SignalInterface):
             slm_lib.Delete_SDK()
         
     def upload_img(self, arr):
-        arr = arr[:,:,0]
+        arr = arr[:,:,0]              # takes just the first entry (R) of RGB
         arr = arr.flatten()
-        print(arr)
-        print(type(arr))
-        print(np.size(arr))
-        print(np.shape(arr))
         if self.constructed_okay:
             retVal = slm_lib.Write_image(board_number, arr.ctypes.data_as(POINTER(c_ubyte)),
                                      self.height_.value*self.width_.value*self.bytes.value, wait_For_Trigger,
@@ -149,6 +133,9 @@ class SLM_PCIeManager(SignalInterface):
                 if(retVal == -1):
                     print ("ImageWriteComplete failed, trigger never received?")
                     slm_lib.Delete_SDK()
+    
+    def closeEvent(self):
+        slm_lib.Delete_SDK()
 # ----------------------------------------------------------------
 
     def saveState(self, state_general=None, state_pos=None, state_aber=None):
@@ -180,21 +167,21 @@ class SLM_PCIeManager(SignalInterface):
 
     def initTiltMask(self):
         # Add blazed grating tilting mask
-        self.__maskTiltLeft = Mask(self.__slmSize[1], int(self.__slmSize[0]),
+        self.__maskTiltLeft = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2),
                                    self.__wavelength)
         self.__maskTiltLeft.setTilt(self.__pixelsize)
-        # self.__maskTiltRight = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2),
-        #                             self.__wavelength)
-        # self.__maskTiltRight.setTilt(self.__pixelsize)
+        self.__maskTiltRight = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2),
+                                    self.__wavelength)
+        self.__maskTiltRight.setTilt(self.__pixelsize)
 
     def initAberrationMask(self):
         # Add blazed grating tilting mask
-        self.__maskAberLeft = Mask(self.__slmSize[1], int(self.__slmSize[0]),
+        self.__maskAberLeft = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2),
                                    self.__wavelength)
         self.__maskAberLeft.setBlack()
-        # self.__maskAberRight = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2),
-        #                             self.__wavelength)
-        # self.__maskAberRight.setBlack()
+        self.__maskAberRight = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2),
+                                    self.__wavelength)
+        self.__maskAberRight.setBlack()
 
     def setMask(self, mask, maskMode):
         if self.__masks[mask].mask_type == MaskMode.Black and maskMode != MaskMode.Black:
@@ -233,7 +220,8 @@ class SLM_PCIeManager(SignalInterface):
         self.__masksAber[mask].moveCenter(move_v)
 
     def getCenters(self):
-        centerCoords = {"left": self.__masks[0].getCenter()}
+        centerCoords = {"left": self.__masks[0].getCenter(),
+                        "right": self.__masks[1].getCenter()}
         return centerCoords
 
     def setCenters(self, centerCoords):
@@ -241,6 +229,8 @@ class SLM_PCIeManager(SignalInterface):
                                                              self.__masksAber)):
             if idx == 0:
                 center = (centerCoords["left"]["xcenter"], centerCoords["left"]["ycenter"])
+            elif idx == 1:
+                center = (centerCoords["right"]["xcenter"], centerCoords["right"]["ycenter"])
             mask.setCenter(center)
             masktilt.setCenter(center)
             maskaber.setCenter(center)
@@ -254,12 +244,18 @@ class SLM_PCIeManager(SignalInterface):
     def setAberrationFactors(self, aber_info):
         lAberFactors = aber_info["left"]
         self.__masksAber[0].setAberrationFactors(lAberFactors)
+        rAberFactors = aber_info["right"]
+        self.__masksAber[1].setAberrationFactors(rAberFactors)
 
     def setAberrations(self, aber_info, mask):
         if mask == 0 or mask == None:
             lAberFactors = aber_info["left"]
             self.__masksAber[0].setAberrationFactors(lAberFactors)
             self.__masksAber[0].setAberrations()
+        if mask == 1 or mask == None:
+            rAberFactors = aber_info["right"]
+            self.__masksAber[1].setAberrationFactors(rAberFactors)
+            self.__masksAber[1].setAberrations()
 
     def setRadius(self, radius):
         for mask, masktilt, maskaber in zip(self.__masks, self.__masksTilt, self.__masksAber):
@@ -282,11 +278,11 @@ class SLM_PCIeManager(SignalInterface):
 
     def update(self, maskChange=False, tiltChange=False, aberChange=False):
         if maskChange:
-            self.maskDouble = self.__masks[0]
+            self.maskDouble = self.__masks[0].concat(self.__masks[1])
         if tiltChange:
-            self.maskTilt = self.__masksTilt[0]
+            self.maskTilt = self.__masksTilt[0].concat(self.__masksTilt[1])
         if aberChange:
-            self.maskAber = self.__masksAber[0]
+            self.maskAber = self.__masksAber[0].concat(self.__masksAber[1])
         self.maskCombined = self.maskDouble + self.maskAber + self.maskTilt + self.__maskCorrection
         self.sigSLMMaskUpdated.emit(self.maskCombined)
 
@@ -331,7 +327,7 @@ class Mask:
         for mask in [self, maskOther]:
             mask.updateImage()
             mask.setCircular()
-        maskCombined = Mask(self.height, self.width, self.wavelength)
+        maskCombined = Mask(self.height, self.width * 2, self.wavelength)
         imgCombined = np.concatenate((self.img, maskOther.img), axis=1)
         maskCombined.loadArray(imgCombined)
         return maskCombined
@@ -634,7 +630,7 @@ class Direction(enum.Enum):
 
 class MaskChoice(enum.Enum):
     Left = 0
- 
+    Right = 1
 
 
 # Copyright (C) 2020-2021 ImSwitch developers
