@@ -99,10 +99,10 @@ class SLM_PCIeManager(SignalInterface):
                 # slm_lib.Load_LUT_file(board_number, b"C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\LUT Files\\slm6517_at635_30C.LUT")
             
                 # Create a vector to hold values for a SLM image
-                blank_img = np.zeros([self.width_.value*self.height_.value*self.bytes.value], np.uint8, 'C')
+                self.blank_img = np.zeros([self.width_.value*self.height_.value*self.bytes.value], np.uint8, 'C')
                 
                 # Writes a blank pattern to the SLM
-                retVal = slm_lib.Write_image(board_number, blank_img.ctypes.data_as(POINTER(c_ubyte)),
+                retVal = slm_lib.Write_image(board_number, self.blank_img.ctypes.data_as(POINTER(c_ubyte)),
                                             self.height_.value*self.width_.value*self.bytes.value, wait_For_Trigger,
                                             flip_immediate, OutputPulseImageFlip, OutputPulseImageRefresh, timeout_ms)
                 if (retVal == -1):
@@ -135,6 +135,10 @@ class SLM_PCIeManager(SignalInterface):
                     slm_lib.Delete_SDK()
     
     def closeEvent(self):
+        # slm_lib.Write_image(board_number, self.blank_img.ctypes.data_as(POINTER(c_ubyte)),                                        # not working at the moment
+        #                                     self.height_.value*self.width_.value*self.bytes.value, wait_For_Trigger,
+        #                                     flip_immediate, OutputPulseImageFlip, OutputPulseImageRefresh, timeout_ms)
+        # slm_lib.ImageWriteComplete(board_number, timeout_ms)
         slm_lib.Delete_SDK()
 # ----------------------------------------------------------------
 
