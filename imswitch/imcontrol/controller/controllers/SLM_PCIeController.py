@@ -75,9 +75,9 @@ class SLM_PCIeController(ImConWidgetController):
 
         arr = maskCombined.image()
 
-        # Padding: Like they do in the software
-        pad = np.zeros((600, 8), dtype=np.uint8)
-        arr = np.append(arr, pad, 1)
+        # # Padding: Like they do in the software
+        # pad = np.zeros((1024, 8), dtype=np.uint8)
+        # arr = np.append(arr, pad, 1)
 
         # Create final image array
         h, w = arr.shape[0], arr.shape[1]

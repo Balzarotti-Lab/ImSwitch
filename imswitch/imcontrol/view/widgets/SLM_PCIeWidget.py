@@ -21,16 +21,16 @@ class SLM_PCIeWidget(Widget):
         self.slmFrame = pg.GraphicsLayoutWidget()
         self.vb = self.slmFrame.addViewBox(row=1, col=1)
         self.img = pg.ImageItem()
-        self.img.setImage(np.zeros((792, 600)), autoLevels=True, autoDownsample=True,
+        self.img.setImage(np.zeros((1024, 1024)), autoLevels=True, autoDownsample=True,
                           autoRange=True)
         self.vb.addItem(self.img)
         self.vb.setAspectLocked(True)
 
         self.slmParameterTree = ParameterTree()
         self.generalparams = [{'name': 'general', 'type': 'group', 'children': [
-            {'name': 'radius', 'type': 'float', 'value': 100, 'limits': (0, 600), 'step': 1,
+            {'name': 'radius', 'type': 'float', 'value': 100, 'limits': (0, 1024), 'step': 1,
              'suffix': 'px'},
-            {'name': 'sigma', 'type': 'float', 'value': 35, 'limits': (1, 599), 'step': 0.1,
+            {'name': 'sigma', 'type': 'float', 'value': 35, 'limits': (1, 1023), 'step': 0.1,
              'suffix': 'px'},
             {'name': 'rotationAngle', 'type': 'float', 'value': 0, 'limits': (-6.2832, 6.2832),
              'step': 0.1,
