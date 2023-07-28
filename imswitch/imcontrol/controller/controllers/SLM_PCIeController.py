@@ -92,6 +92,13 @@ class SLM_PCIeController(ImConWidgetController):
 
         self._widget.updateSLMDisplay(img)
 
+
+# myAdd
+        self._master.slm_PCIeManager.upload_img(img)
+        
+# ----------------------------------------
+
+
     # Button pressed functions
     def moveMask(self, direction):
         amount = self._widget.controlPanel.incrementSpinBox.value()

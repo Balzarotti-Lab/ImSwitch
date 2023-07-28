@@ -10,6 +10,49 @@ from scipy import signal as sg
 from imswitch.imcommon.framework import Signal, SignalInterface
 from imswitch.imcommon.model import initLogger
 
+# myAdd
+
+from ctypes import *
+from imswitch.imcommon.model.dirtools import _baseDataFilesDir
+print(_baseDataFilesDir)
+cdll.LoadLibrary(_baseDataFilesDir + "\\libs\\slm_PCIe\\Blink_C_wrapper")
+slm_lib = CDLL("Blink_C_wrapper")
+
+# cdll.LoadLibrary(_baseDataFilesDir + "\\libs\\slm_PCIe\\ImageGen")   # not needed at the moment    # image generation won't be used from the SDK
+# image_lib = CDLL("ImageGen")
+
+# Basic parameters for calling Create_SDK
+bit_depth = c_uint(12)
+num_boards_found = c_uint(0)
+constructed_okay = c_uint(-1)
+is_nematic_type = c_bool(1)
+RAM_write_enable = c_bool(1)
+use_GPU = c_bool(1)
+max_transients = c_uint(20)
+board_number = c_uint(1)
+wait_For_Trigger = c_uint(0)
+flip_immediate = c_uint(0) #only supported on the 1024
+timeout_ms = c_uint(5000)
+center_x = c_float(256)
+center_y = c_float(256)
+VortexCharge = c_uint(3)
+fork = c_uint(0)
+RGB = c_uint(0)
+# Both pulse options can be false, but only one can be true. You either generate a pulse when the new image begins loading to the SLM
+# or every 1.184 ms on SLM refresh boundaries, or if both are false no output pulse is generated.
+OutputPulseImageFlip = c_uint(0)
+OutputPulseImageRefresh = c_uint(0); #only supported on 1920x1152, FW rev 1.8. 
+
+# ---------------------------------------------------------------
+
+
+
+
+
+
+
+
+
 
 class SLM_PCIeManager(SignalInterface):
     sigSLMMaskUpdated = Signal(object)  # (maskCombined)
@@ -189,6 +232,14 @@ class SLM_PCIeManager(SignalInterface):
 
         returnmask = self.maskDouble + self.maskAber
         return returnmask.image()
+
+
+# myAdd
+    def upload_img(self, arr):
+        arr = arr[:,:,0]
+        arr = arr.flatten()
+        print(arr)
+# -------------------------------------------------
 
 
 class Mask:
