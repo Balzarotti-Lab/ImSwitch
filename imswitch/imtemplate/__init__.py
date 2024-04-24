@@ -4,13 +4,19 @@ __title__ = 'Template Name'
 
 def getMainViewAndController(moduleCommChannel, *_args, **_kwargs):
     import os
-    from imswitch.imcommon.model import dirtools
+    from imswitch.imcommon.model import dirtools, initLogger
+    from .controller import ImTempMainController
+    from .view import ViewSetupInfo, ImTempMainView
+
     os.environ['PATH'] = os.environ['PATH'] + ';' + dirtools.DataFileDirs.Libs
 
-    from .controller import ImTempMainController
-    from .view import ImTempMainView
+    logger = initLogger('imtemplate init')
 
-    view = ImTempMainView()
+    # Define default options and setupInfo
+    options = {}  # Replace with default options as necessary
+    setupInfo = ViewSetupInfo()  # Replace with default setupInfo as necessary
+
+    view = ImTempMainView(options, setupInfo)
     try:
         controller = ImTempMainController(view, moduleCommChannel)
     except Exception as e:
