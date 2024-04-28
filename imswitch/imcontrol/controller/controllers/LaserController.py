@@ -71,7 +71,7 @@ class LaserController(ImConWidgetController):
         self._master.lasersManager[laserName].setValue(magnitude)
         self._widget.setValue(laserName, magnitude)
         self.setSharedAttr(laserName, _valueAttr, magnitude)
-    
+
     def toggleModulation(self, laserName, enabled):
         """ Enable or disable laser modulation (on/off). """
         self._master.lasersManager[laserName].setModulationEnabled(enabled)
@@ -82,7 +82,7 @@ class LaserController(ImConWidgetController):
         self._master.lasersManager[laserName].setModulationFrequency(frequency)
         self._widget.setModulationFrequency(laserName, frequency)
         self.setSharedAttr(laserName, _freqAttr, frequency)
-    
+
     def dutyCycleChanged(self, laserName, dutyCycle):
         """ Change modulation duty cycle. """
         self._master.lasersManager[laserName].setModulationDutyCycle(dutyCycle)
@@ -268,7 +268,7 @@ class LaserController(ImConWidgetController):
     @APIExport(runOnUIThread=True)
     def sendTrigger(self, triggerId: int):
         """ Sends a trigger puls through external device """
-        #TODo: Very special case, try to move in seperate manager 
+        #TODo: Very special case, try to move in seperate manager
         self._master.rs232sManager["ESP32"]._esp32.sendTrigger(triggerId)
 
     @APIExport(runOnUIThread=True)
