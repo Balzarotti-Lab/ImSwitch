@@ -17,7 +17,7 @@ class ImConMainView(QtWidgets.QMainWindow):
     def __init__(self, options, viewSetupInfo, *args, **kwargs):
         self.__logger = initLogger(self)
         self.__logger.debug('Initializing')
-        
+
         super().__init__(*args, **kwargs)
 
         self.pickSetupDialog = PickSetupDialog(self)
@@ -73,7 +73,8 @@ class ImConMainView(QtWidgets.QMainWindow):
             'ULenses': _DockInfo(name='uLenses Tool', yPosition=3),
             'FFT': _DockInfo(name='FFT Tool', yPosition=3),
             'Watcher': _DockInfo(name='File Watcher', yPosition=3),
-            'Tiling': _DockInfo(name='Tiling', yPosition=3)
+            'Tiling': _DockInfo(name='Tiling', yPosition=3),
+            'Hello': _DockInfo(name='Hello', yPosition=4)
         }
         leftDockInfos = {
             'Settings': _DockInfo(name='Detector Settings', yPosition=0),

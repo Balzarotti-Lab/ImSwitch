@@ -8,6 +8,7 @@ from .ConsoleWidget import ConsoleWidget
 from .EtSTEDWidget import EtSTEDWidget
 from .FFTWidget import FFTWidget
 from .FocusLockWidget import FocusLockWidget
+from .HelloWidget import HelloWidget
 from .ImageWidget import ImageWidget
 from .LaserWidget import LaserWidget
 from .MotCorrWidget import MotCorrWidget

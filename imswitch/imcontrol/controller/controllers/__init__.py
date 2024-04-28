@@ -7,6 +7,7 @@ from .ConsoleController import ConsoleController
 from .EtSTEDController import EtSTEDController
 from .FFTController import FFTController
 from .FocusLockController import FocusLockController
+from .HelloController import HelloController
 from .ImageController import ImageController
 from .LaserController import LaserController
 from .MotCorrController import MotCorrController
