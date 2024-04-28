@@ -11,10 +11,12 @@ import logging
 class HelloWidget(Widget):
 
     def __init__(self, *args, **kwargs):
-        # debug log message
-        super().__init__(*args, **kwargs)
         self.__logger = initLogger(self)
         self.__logger.info('Initializing HelloWidget')
+        print('HelloWidget')
+
+        # debug log message
+        super().__init__(*args, **kwargs)
 
 
         self.showCheck = QtWidgets.QCheckBox("hiiiii")
