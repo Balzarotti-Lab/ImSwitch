@@ -4,13 +4,15 @@ from imswitch.imcommon.view.guitools import colorutils
 from imswitch.imcontrol.view import guitools
 from .basewidgets import Widget
 
+from imswitch.imcommon.model import initLogger
+
 
 class LaserWidget(Widget):
     """ Laser widget for setting laser powers etc. """
 
     sigEnableChanged = QtCore.Signal(str, bool)  # (laserName, enabled)
     sigValueChanged = QtCore.Signal(str, float)  # (laserName, value)
-    
+
     sigModEnabledChanged = QtCore.Signal(str, bool) # (laserName, modulationEnabled)
     sigFreqChanged = QtCore.Signal(str, int)        # (laserName, frequency)
     sigDutyCycleChanged = QtCore.Signal(str, int)   # (laserName, dutyCycle)
@@ -24,6 +26,9 @@ class LaserWidget(Widget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.__logger = initLogger(self)
+        self.__logger.debug('Initializing')
+
         self.laserModules = {}
 
         self.setMinimumHeight(320)
@@ -125,6 +130,8 @@ class LaserWidget(Widget):
         self.lasersGrid.addWidget(control, len(self.laserModules), 1)
         self.laserModules[laserName] = control
 
+        self.__logger.debug(f'Added laser {laserName}')
+
     def isLaserActive(self, laserName):
         """ Returns whether the specified laser is powered on. """
         return self.laserModules[laserName].isActive()
@@ -156,7 +163,7 @@ class LaserWidget(Widget):
         """ Sets the value of the specified laser, in the units that the laser
         uses. """
         self.laserModules[laserName].setValue(value)
-    
+
     def setModulationFrequency(self, laserName, value):
         """ Sets the modulation frequency of the specified laser. """
         self.laserModules[laserName].setModulationFrequency(value)
@@ -283,7 +290,7 @@ class LaserModule(QtWidgets.QWidget):
         self.powerGrid.addWidget(self.minpower, 0, 2, 2, 1)
         self.powerGrid.addWidget(self.slider, 0, 3, 2, 1)
         self.powerGrid.addWidget(self.maxpower, 0, 4, 2, 1)
-        
+
         if isModulated:
             freqRangeMin, freqRangeMax, initialFrequency = frequencyRange
             # laser modulation widgets
@@ -337,7 +344,7 @@ class LaserModule(QtWidgets.QWidget):
             self.modulationGroup.setLayout(self.modulationLayout)
 
             self.powerGrid.addWidget(self.modulationGroup, 2, 0, 1, 5)
-                
+
         self.enableButton = guitools.BetterPushButton('ON')
         self.enableButton.setSizePolicy(QtWidgets.QSizePolicy.Minimum,
                                         QtWidgets.QSizePolicy.Expanding)
@@ -387,12 +394,12 @@ class LaserModule(QtWidgets.QWidget):
         """ Returns the value of the laser, in the units that the laser
         uses. """
         return float(self.setPointEdit.text())
-    
+
     def getFrequency(self):
         """ Returns the selected frequency of the laser.
         """
         return int(self.modulationFrequencyEdit.text())
-    
+
     def getDutyCycle(self):
         """ Returns the selected duty cycle of the laser.
         """
@@ -416,12 +423,12 @@ class LaserModule(QtWidgets.QWidget):
         """ Sets the value of the laser, in the units that the laser uses. """
         self.setPointEdit.setText(f'%.{self.valueDecimals}f' % value)
         self.slider.setValue(value)
-    
+
     def setModulationFrequency(self, value):
         """ Sets the laser modulation frequency. """
         self.modulationFrequencyEdit.setText(f"{value}")
         self.modulationFrequencySlider.setValue(value)
-    
+
     def setModulationDutyCycle(self, value):
         """ Sets the laser modulation duty cycle. """
         self.modulationDutyCycleEdit.setText(f"{value}")

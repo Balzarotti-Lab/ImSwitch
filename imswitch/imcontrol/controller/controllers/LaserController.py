@@ -5,6 +5,8 @@ from imswitch.imcontrol.model import configfiletools
 from imswitch.imcontrol.view import guitools
 from ..basecontrollers import ImConWidgetController
 
+from imswitch.imcommon.model import initLogger
+
 
 class LaserController(ImConWidgetController):
     """ Linked to LaserWidget."""
@@ -12,8 +14,13 @@ class LaserController(ImConWidgetController):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.__logger = initLogger(self)
+        self.__logger.debug(f"Lasers before: {self._widget.laserModules} ")
+
         self.settingAttr = False
         self.presetBeforeScan = None
+
+        self.__logger.debug(f"Laser managers {self._master.lasersManager}")
 
         # Set up lasers
         for lName, lManager in self._master.lasersManager:
@@ -29,6 +36,7 @@ class LaserController(ImConWidgetController):
             self.setSharedAttr(lName, _enabledAttr, self._widget.isLaserActive(lName))
             self.setSharedAttr(lName, _valueAttr, self._widget.getValue(lName))
 
+        self.__logger.debug(f"Lasers after: {self._widget.laserModules} ")
         # Load presets
         for laserPresetName in self._setupInfo.laserPresets:
             self._widget.addPreset(laserPresetName)
@@ -71,6 +79,12 @@ class LaserController(ImConWidgetController):
         self._master.lasersManager[laserName].setValue(magnitude)
         self._widget.setValue(laserName, magnitude)
         self.setSharedAttr(laserName, _valueAttr, magnitude)
+        self.__logger.debug(f"Value changed: {laserName} {magnitude}")
+        self.__logger.debug(f"Shared attr: {self._commChannel.sharedAttrs}")
+        # display all the attributes of the sharedAttrs object
+        self.__logger.debug(f"Shared attr: {self._commChannel.sharedAttrs.__dict__}")
+        self.__logger.debug(f"Shared attr: {self._commChannel.sharedAttrs.__dict__['_data']}")
+        self.__logger.debug(f"Shared attr: {self._commChannel.sharedAttrs._data}")
 
     def toggleModulation(self, laserName, enabled):
         """ Enable or disable laser modulation (on/off). """
@@ -238,6 +252,7 @@ class LaserController(ImConWidgetController):
 
     def setSharedAttr(self, laserName, attr, value):
         self.settingAttr = True
+        # self.__logger.debug(f"Setting shared attr: {_attrCategory} {laserName} {attr} {value}")
         try:
             self._commChannel.sharedAttrs[(_attrCategory, laserName, attr)] = value
         finally:
