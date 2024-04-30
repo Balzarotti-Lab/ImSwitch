@@ -15,9 +15,12 @@ class HelloController(LiveUpdatedController):
 
         # connect widgets signals
         self._widget.sigValueChanged.connect(self.valueChanged)
-        # self._widget.lasValueChanged.connect(self.valueChanged)
-        # get the value of the laser controller
-        QtCore.Signal(self._commChannel.sharedAttrs._data[('Laser', '365 LED', 'Value')]).sigValueChanged.connect(self.valueChanged)
+        self._widget.sigValueChanged.connect(self.valueChanged)
+
+        self._commChannel.sigLaserValueChanged.connect(self.handleLaserValueChanged)
+        self._commChannel.sigLaserValueChanged.connect(self.handleLaserValueChanged)
+        # self._commChannel.sigLaserValueChanged[float].connect(self.debugSignal)
+
 
         self.vals = np.zeros(100)
         self.__logger.debug(f"vals = {self.vals}")
@@ -25,8 +28,17 @@ class HelloController(LiveUpdatedController):
     def valueChanged(self, value):
         self.vals[:-1] = self.vals[1:]
         self.vals[-1] = value
+        self._commChannel.sigLaserValueChanged.emit(value)
+
+    # def valueChanged(self, value):
+
+    def handleLaserValueChanged(self, lasName, val):
+        self.__logger.debug(f"Received new value: {lasName} and {val}")
+        self.vals[:-1] = self.vals[1:]
+        self.vals[-1] = val
         self.__logger.debug(f"vals = {self.vals}")
         self.update(self.vals)
+        # Do something with newValue
 
     def update(self, value):
         self._widget.updateGraph(value)

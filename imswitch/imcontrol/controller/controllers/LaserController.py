@@ -47,11 +47,15 @@ class LaserController(ImConWidgetController):
         # Connect CommunicationChannel signals
         self._commChannel.sharedAttrs.sigAttributeSet.connect(self.attrChanged)
         self._commChannel.sigScanStarting.connect(lambda: self.scanChanged(True))
+        self.__logger.debug(f"Shared attr sig attr set: \n{self._commChannel.sharedAttrs.sigAttributeSet}")
         self._commChannel.sigScanBuilt.connect(self.scanBuilt)
         self._commChannel.sigScanEnded.connect(lambda: self.scanChanged(False))
 
+        self._widget.sigValueChanged.connect(
+            lambda laserName, magnitude: (self._commChannel.sigLaserValueChanged.emit(laserName, magnitude), self.__logger.debug(f"Value emitted: {laserName} {magnitude}")))
         # Connect LaserWidget signals
         self._widget.sigEnableChanged.connect(self.toggleLaser)
+        self.__logger.debug(f"Widget sigEnableChanged: \n{self._widget.sigEnableChanged}")
         self._widget.sigValueChanged.connect(self.valueChanged)
 
         self._widget.sigModEnabledChanged.connect(self.toggleModulation)
