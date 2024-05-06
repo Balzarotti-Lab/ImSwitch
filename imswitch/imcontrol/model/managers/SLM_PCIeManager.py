@@ -25,7 +25,7 @@ use_GPU = c_bool(1)
 max_transients = c_uint(20)
 board_number = c_uint(1)
 wait_For_Trigger = c_uint(0)
-flip_immediate = c_uint(0) #only supported on the 1024
+flip_immediate = c_uint(0)  # only supported on the 1024
 timeout_ms = c_uint(5000)
 center_x = c_float(256)
 center_y = c_float(256)
@@ -35,7 +35,7 @@ RGB = c_uint(0)
 # Both pulse options can be false, but only one can be true. You either generate a pulse when the new image begins loading to the SLM
 # or every 1.184 ms on SLM refresh boundaries, or if both are false no output pulse is generated.
 OutputPulseImageFlip = c_uint(0)
-OutputPulseImageRefresh = c_uint(0); #only supported on 1920x1152, FW rev 1.8.
+OutputPulseImageRefresh = c_uint(0)  # only supported on 1920x1152, FW rev 1.8.
 
 # ---------------------------------------------------------------
 
@@ -62,7 +62,8 @@ class SLM_PCIeManager(SignalInterface):
         cdll.LoadLibrary(_baseDataFilesDir + "\\libs\\slm_PCIe\\Blink_C_wrapper")
         self.slm_lib = CDLL("Blink_C_wrapper")
 
-        cdll.LoadLibrary("C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\SDK\\ImageGen")
+        cdll.LoadLibrary(
+            "C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\SDK\\ImageGen")
         self.deleteLaterimage_lib = CDLL("ImageGen")
 
         # create the masks for left and right side of the SLM
@@ -87,6 +88,8 @@ class SLM_PCIeManager(SignalInterface):
 
 
 # myAdd
+
+
     def init_SLMController(self):
 
         # constatns for Create_SDK
@@ -99,7 +102,7 @@ class SLM_PCIeManager(SignalInterface):
         max_transients = c_uint(20)
         board_number = c_uint(1)
         wait_For_Trigger = c_uint(0)
-        flip_immediate = c_uint(0) #only supported on the 1024
+        flip_immediate = c_uint(0)  # only supported on the 1024
         timeout_ms = c_uint(5000)
         center_x = c_float(256)
         center_y = c_float(256)
@@ -108,7 +111,7 @@ class SLM_PCIeManager(SignalInterface):
         RGB = c_uint(0)
 
         self.slm_lib.Create_SDK(bit_depth, byref(num_boards_found), byref(constructed_okay),
-                           is_nematic_type, RAM_write_enable, use_GPU, max_transients, 0)
+                                is_nematic_type, RAM_write_enable, use_GPU, max_transients, 0)
 
         if not constructed_okay.value == 0:
             self.constructed_okay = True
@@ -120,7 +123,7 @@ class SLM_PCIeManager(SignalInterface):
 
                 self.height_ = c_uint(self.slm_lib.Get_image_height(board_number))
                 self.width_ = c_uint(self.slm_lib.Get_image_width(board_number))
-                self.depth_ = c_uint(self.slm_lib.Get_image_depth(board_number)) # Bits per pixel
+                self.depth_ = c_uint(self.slm_lib.Get_image_depth(board_number))  # Bits per pixel
                 self.bytes = c_uint(self.depth_.value//8)
                 self.center_x = c_uint(self.width_.value//2)
                 self.center_y = c_uint(self.height_.value//2)
@@ -132,18 +135,17 @@ class SLM_PCIeManager(SignalInterface):
                 # load the LUT
                 self.slm_lib.Load_LUT_file(board_number, self.__slm_PCIeInfo.LUTfile)
 
-                # Loading LUTs: Controller keeps last used LUT
-                # slm_lib.Load_LUT_file(board_number, b"C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\LUT Files\\1024x1024_linearVoltage.LUT")
-                # slm_lib.Load_LUT_file(board_number, b"C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\LUT Files\\slm6517_at635_75C.LUT")
-                # slm_lib.Load_LUT_file(board_number, b"C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\LUT Files\\slm6517_at635_30C.LUT")
+                # TODO load the wFC
+                self.WFCarray = np.zeros([self.width_.value*self.height_.value], np.uint8, 'C')
 
                 # Create a vector to hold values for a SLM image
-                self.blank_img = np.zeros([self.width_.value*self.height_.value*self.bytes.value], np.uint8, 'C')
+                self.blank_img = np.zeros(
+                    [self.width_.value*self.height_.value*self.bytes.value], np.uint8, 'C')
 
                 # Writes a blank pattern to the SLM
                 retVal = self.slm_lib.Write_image(board_number, self.blank_img.ctypes.data_as(POINTER(c_ubyte)),
-                                            self.height_.value*self.width_.value*self.bytes.value, wait_For_Trigger,
-                                            flip_immediate, OutputPulseImageFlip, OutputPulseImageRefresh, timeout_ms)
+                                                  self.height_.value*self.width_.value*self.bytes.value, wait_For_Trigger,
+                                                  flip_immediate, OutputPulseImageFlip, OutputPulseImageRefresh, timeout_ms)
                 if (retVal == -1):
                     self.__logger.error("Upload/Communication to SLM failed")
                     self.slm_lib.Delete_SDK()
@@ -155,29 +157,29 @@ class SLM_PCIeManager(SignalInterface):
             self.slm_lib.Delete_SDK()
 
     def upload_img(self, arr):
-        arr = arr[:,:,0]              # takes just the first entry (R) of RGB
+        arr = arr[:, :, 0]              # takes just the first entry (R) of RGB
         arr = arr.flatten()
         if self.constructed_okay:
             retVal = self.slm_lib.Write_image(board_number, arr.ctypes.data_as(POINTER(c_ubyte)),
-                                     self.height_.value*self.width_.value*self.bytes.value, wait_For_Trigger,
-                                     flip_immediate, OutputPulseImageFlip, OutputPulseImageRefresh, timeout_ms)
+                                              self.height_.value*self.width_.value*self.bytes.value, wait_For_Trigger,
+                                              flip_immediate, OutputPulseImageFlip, OutputPulseImageRefresh, timeout_ms)
 
             if (retVal == -1):
-                print ("Upload/Communication to SLM failed")
+                print("Upload/Communication to SLM failed")
                 self.slm_lib.Delete_SDK()
             else:
-                #check the buffer is ready to receive the next image
+                # check the buffer is ready to receive the next image
                 print("upload")
                 retVal = self.slm_lib.ImageWriteComplete(board_number, timeout_ms)
-                if(retVal == -1):
-                    print ("ImageWriteComplete failed, trigger never received?")
+                if (retVal == -1):
+                    print("ImageWriteComplete failed, trigger never received?")
                     self.slm_lib.Delete_SDK()
 
     def closeEvent(self):
-        # slm_lib.Write_image(board_number, self.blank_img.ctypes.data_as(POINTER(c_ubyte)),                                        # not working at the moment
-        #                                     self.height_.value*self.width_.value*self.bytes.value, wait_For_Trigger,
-        #                                     flip_immediate, OutputPulseImageFlip, OutputPulseImageRefresh, timeout_ms)
-        # slm_lib.ImageWriteComplete(board_number, timeout_ms)
+        slm_lib.Write_image(board_number, self.blank_img.ctypes.data_as(POINTER(c_ubyte)),                                        # not working at the moment
+                            self.height_.value*self.width_.value*self.bytes.value, wait_For_Trigger,
+                            flip_immediate, OutputPulseImageFlip, OutputPulseImageRefresh, timeout_ms)
+        self.slm_lib.ImageWriteComplete(board_number, timeout_ms)
         self.slm_lib.Delete_SDK()
 # ----------------------------------------------------------------
 
@@ -315,7 +317,7 @@ class SLM_PCIeManager(SignalInterface):
             mask.setRotationAngle(rotation_angle)
 
     def setTiltAngle(self, tilt_angle):
-        inverts = [1,-1]
+        inverts = [1, -1]
         for idx, mask in enumerate(self.__masksTilt):
             mask.setTiltAngle(tilt_angle, inverts[idx])
 
@@ -469,14 +471,22 @@ class Mask:
         fVertAst = self.aber_params_info["verticalAstigmatism"]
         fOblAst = self.aber_params_info["obliqueAstigmatism"]
 
-        mask = np.fromfunction(lambda i, j: fTilt * 2 * np.sqrt(((i - self.centerx) / self.radius)**2 + ((j - self.centery) / self.radius)**2) * np.sin(np.arctan2(((j - self.centery) / self.radius), ((i - self.centerx) / self.radius))), (self.height, self.width), dtype="float")
-        mask += np.fromfunction(lambda i, j: fTip * 2 * np.sqrt(((i - self.centerx) / self.radius)**2 + ((j - self.centery) / self.radius)**2) * np.cos(np.arctan2(((j - self.centery) / self.radius), ((i - self.centerx) / self.radius))), (self.height, self.width), dtype="float")
-        mask += np.fromfunction(lambda i, j: fDefoc * np.sqrt(3) * (2 * (((i - self.centerx) / self.radius)**2 + ((j - self.centery) / self.radius)**2) - 1), (self.height, self.width), dtype="float")
-        mask += np.fromfunction(lambda i, j: fSph * np.sqrt(5) * (6 * (((i - self.centerx) / self.radius)**2 + ((j - self.centery) / self.radius)**2)**4 - 6 * (((i - self.centerx) / self.radius)**2 + ((j - self.centery) / self.radius)**2) + 1), (self.height, self.width), dtype="float")
-        mask += np.fromfunction(lambda i, j: fVertComa * np.sqrt(8) * np.sin(np.arctan2(((j - self.centery) / self.radius), ((i - self.centerx) / self.radius))) * (3 * (np.sqrt(((i - self.centerx) / self.radius)**2 + ((j - self.centery) / self.radius)**2))**3 - 2 * np.sqrt(((i - self.centerx) / self.radius)**2 + ((j - self.centery) / self.radius)**2)), (self.height, self.width), dtype="float")
-        mask += np.fromfunction(lambda i, j: fHozComa * np.sqrt(8) * np.cos(np.arctan2(((j - self.centery) / self.radius), ((i - self.centerx) / self.radius))) * (3 * (np.sqrt(((i - self.centerx) / self.radius)**2 + ((j - self.centery) / self.radius)**2))**3 - 2 * np.sqrt(((i - self.centerx) / self.radius)**2 + ((j - self.centery) / self.radius)**2)), (self.height, self.width), dtype="float")
-        mask += np.fromfunction(lambda i, j: fVertAst * np.sqrt(6) * np.cos(2 * np.arctan2(((j - self.centery) / self.radius), ((i - self.centerx) / self.radius))) * ((np.sqrt(((i - self.centerx) / self.radius)**2 + ((j - self.centery) / self.radius)**2))**2), (self.height, self.width), dtype="float")
-        mask += np.fromfunction(lambda i, j: fOblAst * np.sqrt(6) * np.sin(2 * np.arctan2(((j - self.centery) / self.radius), ((i - self.centerx) / self.radius))) * ((np.sqrt(((i - self.centerx) / self.radius)**2 + ((j - self.centery) / self.radius)**2))**2), (self.height, self.width), dtype="float")
+        mask = np.fromfunction(lambda i, j: fTilt * 2 * np.sqrt(((i - self.centerx) / self.radius)**2 + ((j - self.centery) / self.radius)**2)
+                               * np.sin(np.arctan2(((j - self.centery) / self.radius), ((i - self.centerx) / self.radius))), (self.height, self.width), dtype="float")
+        mask += np.fromfunction(lambda i, j: fTip * 2 * np.sqrt(((i - self.centerx) / self.radius)**2 + ((j - self.centery) / self.radius)**2) * np.cos(
+            np.arctan2(((j - self.centery) / self.radius), ((i - self.centerx) / self.radius))), (self.height, self.width), dtype="float")
+        mask += np.fromfunction(lambda i, j: fDefoc * np.sqrt(3) * (2 * (((i - self.centerx) / self.radius)
+                                ** 2 + ((j - self.centery) / self.radius)**2) - 1), (self.height, self.width), dtype="float")
+        mask += np.fromfunction(lambda i, j: fSph * np.sqrt(5) * (6 * (((i - self.centerx) / self.radius)**2 + ((j - self.centery) / self.radius)**2)
+                                ** 4 - 6 * (((i - self.centerx) / self.radius)**2 + ((j - self.centery) / self.radius)**2) + 1), (self.height, self.width), dtype="float")
+        mask += np.fromfunction(lambda i, j: fVertComa * np.sqrt(8) * np.sin(np.arctan2(((j - self.centery) / self.radius), ((i - self.centerx) / self.radius))) * (3 * (np.sqrt(((i - self.centerx) / self.radius)
+                                ** 2 + ((j - self.centery) / self.radius)**2))**3 - 2 * np.sqrt(((i - self.centerx) / self.radius)**2 + ((j - self.centery) / self.radius)**2)), (self.height, self.width), dtype="float")
+        mask += np.fromfunction(lambda i, j: fHozComa * np.sqrt(8) * np.cos(np.arctan2(((j - self.centery) / self.radius), ((i - self.centerx) / self.radius))) * (3 * (np.sqrt(((i - self.centerx) / self.radius)
+                                ** 2 + ((j - self.centery) / self.radius)**2))**3 - 2 * np.sqrt(((i - self.centerx) / self.radius)**2 + ((j - self.centery) / self.radius)**2)), (self.height, self.width), dtype="float")
+        mask += np.fromfunction(lambda i, j: fVertAst * np.sqrt(6) * np.cos(2 * np.arctan2(((j - self.centery) / self.radius), ((i - self.centerx) / self.radius)))
+                                * ((np.sqrt(((i - self.centerx) / self.radius)**2 + ((j - self.centery) / self.radius)**2))**2), (self.height, self.width), dtype="float")
+        mask += np.fromfunction(lambda i, j: fOblAst * np.sqrt(6) * np.sin(2 * np.arctan2(((j - self.centery) / self.radius), ((i - self.centerx) / self.radius))) * (
+            (np.sqrt(((i - self.centerx) / self.radius)**2 + ((j - self.centery) / self.radius)**2))**2), (self.height, self.width), dtype="float")
 
         mask %= 2 * math.pi
         self.img = mask
