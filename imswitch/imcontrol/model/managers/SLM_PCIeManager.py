@@ -13,8 +13,8 @@ from imswitch.imcommon.model import initLogger
 # myAdd
 from ctypes import *
 from imswitch.imcommon.model.dirtools import _baseDataFilesDir
-cdll.LoadLibrary(_baseDataFilesDir + "\\libs\\slm_PCIe\\Blink_C_wrapper")
-slm_lib = CDLL("Blink_C_wrapper")
+# cdll.LoadLibrary(_baseDataFilesDir + "\\libs\\slm_PCIe\\Blink_C_wrapper")
+# slm_lib = CDLL("Blink_C_wrapper")
 
 # Basic parameters for calling Create_SDK
 bit_depth = c_uint(12)
@@ -36,7 +36,7 @@ RGB = c_uint(0)
 # Both pulse options can be false, but only one can be true. You either generate a pulse when the new image begins loading to the SLM
 # or every 1.184 ms on SLM refresh boundaries, or if both are false no output pulse is generated.
 OutputPulseImageFlip = c_uint(0)
-OutputPulseImageRefresh = c_uint(0); #only supported on 1920x1152, FW rev 1.8. 
+OutputPulseImageRefresh = c_uint(0); #only supported on 1920x1152, FW rev 1.8.
 
 # ---------------------------------------------------------------
 
@@ -47,6 +47,8 @@ class SLM_PCIeManager(SignalInterface):
     def __init__(self, slm_PCIeInfo, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__logger = initLogger(self)
+        self.__logger.info("SLM PCIe Manager initializing")
+        self.__logger.debug(f"SLM PCIe Info: {slm_PCIeInfo}")
 
         if slm_PCIeInfo is None:
             return
@@ -76,70 +78,71 @@ class SLM_PCIeManager(SignalInterface):
 
 # myAdd
     def init_SLMController(self):
-        slm_lib.Create_SDK(bit_depth, byref(num_boards_found), byref(constructed_okay),
-                           is_nematic_type, RAM_write_enable, use_GPU, max_transients, 0)
-        
+        # slm_lib.Create_SDK(bit_depth, byref(num_boards_found), byref(constructed_okay),
+                        #    is_nematic_type, RAM_write_enable, use_GPU, max_transients, 0)
+
         if not constructed_okay.value == 0: self.constructed_okay = True
 
         if self.constructed_okay:
-            if num_boards_found.value == 1:                         
+            if num_boards_found.value == 1:
                 print ("Blink SDK was successfully constructed")
                 print ("Found %s SLM controller(s)" % num_boards_found.value)
 
-                self.height_ = c_uint(slm_lib.Get_image_height(board_number))
-                self.width_ = c_uint(slm_lib.Get_image_width(board_number))
-                self.depth_ = c_uint(slm_lib.Get_image_depth(board_number)) # Bits per pixel
+                # self.height_ = c_uint(slm_lib.Get_image_height(board_number))
+                # self.width_ = c_uint(slm_lib.Get_image_width(board_number))
+                # self.depth_ = c_uint(slm_lib.Get_image_depth(board_number)) # Bits per pixel
                 self.bytes = c_uint(self.depth_.value//8)
                 self.center_x = c_uint(self.width_.value//2)
                 self.center_y = c_uint(self.height_.value//2)
 
                 # Loading LUTs: Controller keeps last used LUT
-                # slm_lib.Load_LUT_file(board_number, b"C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\LUT Files\\1024x1024_linearVoltage.LUT")     
+                # slm_lib.Load_LUT_file(board_number, b"C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\LUT Files\\1024x1024_linearVoltage.LUT")
                 # slm_lib.Load_LUT_file(board_number, b"C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\LUT Files\\slm6517_at635_75C.LUT")
                 # slm_lib.Load_LUT_file(board_number, b"C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\LUT Files\\slm6517_at635_30C.LUT")
-            
+
                 # Create a vector to hold values for a SLM image
                 self.blank_img = np.zeros([self.width_.value*self.height_.value*self.bytes.value], np.uint8, 'C')
-                
+
                 # Writes a blank pattern to the SLM
-                retVal = slm_lib.Write_image(board_number, self.blank_img.ctypes.data_as(POINTER(c_ubyte)),
-                                            self.height_.value*self.width_.value*self.bytes.value, wait_For_Trigger,
-                                            flip_immediate, OutputPulseImageFlip, OutputPulseImageRefresh, timeout_ms)
-                if (retVal == -1):
-                    print ("Upload/Communication to SLM failed")
-                    slm_lib.Delete_SDK()
-            else: 
+                # retVal = slm_lib.Write_image(board_number, self.blank_img.ctypes.data_as(POINTER(c_ubyte)),
+                                            # self.height_.value*self.width_.value*self.bytes.value, wait_For_Trigger,
+                                            # flip_immediate, OutputPulseImageFlip, OutputPulseImageRefresh, timeout_ms)
+                # if (retVal == -1):
+                #     print ("Upload/Communication to SLM failed")
+                #     # slm_lib.Delete_SDK()
+            else:
                 print("Board number is not equal to 1 ")
-                slm_lib.Delete_SDK()
+                # slm_lib.Delete_SDK()
         else:
             print ("Blink SDK did not construct successfully")
-            slm_lib.Delete_SDK()
-        
+            # slm_lib.Delete_SDK()
+
     def upload_img(self, arr):
         arr = arr[:,:,0]              # takes just the first entry (R) of RGB
         arr = arr.flatten()
-        if self.constructed_okay:
-            retVal = slm_lib.Write_image(board_number, arr.ctypes.data_as(POINTER(c_ubyte)),
-                                     self.height_.value*self.width_.value*self.bytes.value, wait_For_Trigger,
-                                     flip_immediate, OutputPulseImageFlip, OutputPulseImageRefresh, timeout_ms)
+        # if self.constructed_okay:
+            # retVal = slm_lib.Write_image(board_number, arr.ctypes.data_as(POINTER(c_ubyte)),
+                                    #  self.height_.value*self.width_.value*self.bytes.value, wait_For_Trigger,
+                                    #  flip_immediate, OutputPulseImageFlip, OutputPulseImageRefresh, timeout_ms)
 
-            if (retVal == -1):
-                print ("Upload/Communication to SLM failed")
-                slm_lib.Delete_SDK()
-            else:
-                #check the buffer is ready to receive the next image
-                print("upload")                                                                          
-                retVal = slm_lib.ImageWriteComplete(board_number, timeout_ms)
-                if(retVal == -1):
-                    print ("ImageWriteComplete failed, trigger never received?")
-                    slm_lib.Delete_SDK()
-    
+            # if (retVal == -1):
+            #     print ("Upload/Communication to SLM failed")
+            #     # slm_lib.Delete_SDK()
+            # else:
+            #     #check the buffer is ready to receive the next image
+            #     print("upload")
+            #     # retVal = slm_lib.ImageWriteComplete(board_number, timeout_ms)
+            #     if(retVal == -1):
+            #         print ("ImageWriteComplete failed, trigger never received?")
+                    # slm_lib.Delete_SDK()
+
     def closeEvent(self):
-        # slm_lib.Write_image(board_number, self.blank_img.ctypes.data_as(POINTER(c_ubyte)),                                        # not working at the moment
+        pass
+        # # slm_lib.Write_image(board_number, self.blank_img.ctypes.data_as(POINTER(c_ubyte)),                                        # not working at the moment
         #                                     self.height_.value*self.width_.value*self.bytes.value, wait_For_Trigger,
         #                                     flip_immediate, OutputPulseImageFlip, OutputPulseImageRefresh, timeout_ms)
-        # slm_lib.ImageWriteComplete(board_number, timeout_ms)
-        slm_lib.Delete_SDK()
+        # # slm_lib.ImageWriteComplete(board_number, timeout_ms)
+        # slm_lib.Delete_SDK()
 # ----------------------------------------------------------------
 
     def saveState(self, state_general=None, state_pos=None, state_aber=None):
