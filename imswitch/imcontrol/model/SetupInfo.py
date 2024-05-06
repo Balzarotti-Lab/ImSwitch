@@ -141,8 +141,21 @@ class SLMInfo:
     wavelength. """
 
 
+"""
+        "monitorIdx": 2,
+        "width": 1024,
+        "height": 1024,
+        "bitDepth": 8,
+        "wavelength": 635,
+        "pixelSize": 0.02,
+        "angleMount": 0.15,
+        "correctionPatternsDir": "C:\\Users\\simon.roschger\\Documents\\ImSwitchConfig\\SLM\\",
+        "LUTfile": "Y:\\dummy\\LUT\\path\\dummy.lut"
+"""
+
 @dataclass(frozen=True)
 class SLM_PCIeInfo:
+    # we leave it there but later we will remove it and clean the code
     monitorIdx: int
     """ Index of the monitor in the system list of monitors (indexing starts at
     0). """
@@ -152,6 +165,9 @@ class SLM_PCIeInfo:
 
     height: int
     """ Height of SLM, in pixels. """
+
+    bitDepth: int
+    """ Bit depth of the SLM. """
 
     wavelength: int
     """ Wavelength of the laser line used with the SLM. """
@@ -169,7 +185,10 @@ class SLM_PCIeInfo:
     at various wavelengths. A combination will be chosen based on the
     wavelength. """
 
-    
+    LUTfile: str
+    """ Directory of .lut file for the SLM. """
+
+
 @dataclass(frozen=True)
 class FocusLockInfo:
     camera: str
@@ -341,9 +360,9 @@ class SetupInfo:
     focusLock: Optional[FocusLockInfo] = field(default_factory=lambda: None)
     """ Focus lock settings. Required to be defined to use focus lock
     functionality. """
-    
+
     autofocus: Optional[AutofocusInfo] = field(default_factory=lambda: None)
-    """ Autofocus settings. Required to be defined to use autofocus 
+    """ Autofocus settings. Required to be defined to use autofocus
     functionality. """
 
     scan: Optional[ScanInfo] = field(default_factory=lambda: None)
