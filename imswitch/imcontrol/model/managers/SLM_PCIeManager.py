@@ -72,7 +72,7 @@ class SLM_PCIeManager(SignalInterface):
         self.__masks = [self.__maskLeft, self.__maskRight]
 
         # tilt and aberration masks
-        self.initCorrectionMask()
+        # self.initCorrectionMask()
         self.initTiltMask()
         self.initAberrationMask()
 # myAdd
@@ -191,24 +191,25 @@ class SLM_PCIeManager(SignalInterface):
         if state_aber is not None:
             self.state_aber = state_aber
 
-    def initCorrectionMask(self):
-        # Add correction mask with correction pattern
-        self.__maskCorrection = Mask(self.__slmSize[1], int(self.__slmSize[0]), self.__wavelength)
-        bmpsCorrection = glob.glob(os.path.join(self.__correctionPatternsDir, "*.bmp"))
+    # def initCorrectionMask(self):
+    #     # Add correction mask with correction pattern
+    #     self.__maskCorrection = Mask(self.__slmSize[1], int(self.__slmSize[0]), self.__wavelength)
+    #     bmpsCorrection = glob.glob(os.path.join(self.__correctionPatternsDir, "*.bmp"))
+    #     load = "CAL_LSH0701153_" + "str(wavelengthCorrectionLoad)" + "nm", self.__correctionPatternsDir
+    #     self.__logger.debug(f"Attribute to the loadBMP: \n {load}")
 
-        if len(bmpsCorrection) < 1:
-            self.__logger.error(
-                'No BMP files found in correction patterns directory, cannot initialize correction'
-                ' mask.'
-            )
-            return
+    #     if len(bmpsCorrection) < 1:
+    #         self.__logger.error(
+    #             'No BMP files found in correction patterns directory, cannot initialize correction mask.'
+    #         )
+    #         return
 
-        wavelengthCorrection = [int(x[-9: -6]) for x in bmpsCorrection]
-        # Find the closest correction pattern within the list of patterns available
-        wavelengthCorrectionLoad = min(wavelengthCorrection,
-                                       key=lambda x: abs(x - self.__wavelength))
-        self.__maskCorrection.loadBMP("CAL_LSH0701153_" + str(wavelengthCorrectionLoad) + "nm",
-                                      self.__correctionPatternsDir)
+    #     wavelengthCorrection = [int(x[-9: -6]) for x in bmpsCorrection]
+    #     # Find the closest correction pattern within the list of patterns available
+    #     wavelengthCorrectionLoad = min(wavelengthCorrection,
+    #                                    key=lambda x: abs(x - self.__wavelength))
+    #     self.__maskCorrection.loadBMP("1024black.bmp",
+    #                                   self.__correctionPatternsDir)
 
     def initTiltMask(self):
         # Add blazed grating tilting mask
@@ -328,7 +329,7 @@ class SLM_PCIeManager(SignalInterface):
             self.maskTilt = self.__masksTilt[0].concat(self.__masksTilt[1])
         if aberChange:
             self.maskAber = self.__masksAber[0].concat(self.__masksAber[1])
-        self.maskCombined = self.maskDouble + self.maskAber + self.maskTilt + self.__maskCorrection
+        self.maskCombined = self.maskDouble + self.maskAber + self.maskTilt #+ self.__maskCorrection
         self.sigSLMMaskUpdated.emit(self.maskCombined)
 
         returnmask = self.maskDouble + self.maskAber
