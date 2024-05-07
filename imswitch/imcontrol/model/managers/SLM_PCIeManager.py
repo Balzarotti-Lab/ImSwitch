@@ -165,14 +165,14 @@ class SLM_PCIeManager(SignalInterface):
                                               flip_immediate, OutputPulseImageFlip, OutputPulseImageRefresh, timeout_ms)
 
             if (retVal == -1):
-                print("Upload/Communication to SLM failed")
+                self.__logger.error("Upload/Communication to SLM failed. Deleting SDK")
                 self.slm_lib.Delete_SDK()
             else:
+                self.__logger.debug("Uploading")
                 # check the buffer is ready to receive the next image
-                print("upload")
                 retVal = self.slm_lib.ImageWriteComplete(board_number, timeout_ms)
                 if (retVal == -1):
-                    print("ImageWriteComplete failed, trigger never received?")
+                    self.__logger.error("ImageWriteComplete failed, trigger never received?")
                     self.slm_lib.Delete_SDK()
 
     def closeEvent(self):
