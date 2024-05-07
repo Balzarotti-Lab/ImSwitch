@@ -75,6 +75,10 @@ class SLM_PCIeController(ImConWidgetController):
 
         arr = maskCombined.image()
 
+# myAdd
+        self._master.slm_PCIeManager.upload_img(arr)                                # change for SLM-PCIe
+# ----------------------------------------
+
         # # Padding: Like they do in the software
         # pad = np.zeros((1024, 8), dtype=np.uint8)
         # arr = np.append(arr, pad, 1)
@@ -86,14 +90,12 @@ class SLM_PCIeController(ImConWidgetController):
             # Array is grayscale
             arrGray = arr.copy()
             arrGray.shape = h, w, 1
-            img = np.concatenate((arrGray, arrGray, arrGray), axis=2)
+            displImg = np.concatenate((arrGray, arrGray, arrGray), axis=2)
+            self._widget.updateSLMDisplay(displImg)
         else:
-            img = arr
+            displImg = arr
+            self._widget.updateSLMDisplay(displImg)
 
-        self._widget.updateSLMDisplay(img)
-# myAdd
-        self._master.slm_PCIeManager.upload_img(img)                                # change for SLM-PCIe
-# ----------------------------------------
 
 
     # Button pressed functions

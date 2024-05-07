@@ -157,7 +157,7 @@ class SLM_PCIeManager(SignalInterface):
             self.slm_lib.Delete_SDK()
 
     def upload_img(self, arr):
-        arr = arr[:, :, 0]              # takes just the first entry (R) of RGB
+        # arr = arr[:, :, 0]              # takes just the first entry (R) of RGB
         arr = arr.flatten()
         if self.constructed_okay:
             retVal = self.slm_lib.Write_image(board_number, arr.ctypes.data_as(POINTER(c_ubyte)),
@@ -213,6 +213,10 @@ class SLM_PCIeManager(SignalInterface):
 
     def initTiltMask(self):
         # Add blazed grating tilting mask
+
+        # defalut tilt freq
+        self.defalut_tilt_freq = 0.5
+
         self.__maskTiltLeft = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2),
                                    self.__wavelength)
         self.__maskTiltLeft.setTilt(self.__pixelsize)
@@ -333,6 +337,8 @@ class SLM_PCIeManager(SignalInterface):
         self.sigSLMMaskUpdated.emit(self.maskCombined)
 
         returnmask = self.maskDouble + self.maskAber
+        self.__logger.debug(f"Mask updated: {returnmask}")
+
         return returnmask.image()
 
 
