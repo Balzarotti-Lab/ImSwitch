@@ -6,6 +6,8 @@ import os
 import numpy as np
 from PIL import Image
 from scipy import signal as sg
+import h5py
+
 
 from imswitch.imcommon.framework import Signal, SignalInterface
 from imswitch.imcommon.model import initLogger
@@ -71,6 +73,7 @@ class SLM_PCIeManager(SignalInterface):
         # self.initCorrectionMask()
         self.initTiltMask()
         self.initAberrationMask()
+        self.initScanMask()
 # myAdd
         # SLM controller initialization
         self.constructed_okay = False
@@ -82,6 +85,8 @@ class SLM_PCIeManager(SignalInterface):
 
         self.update(maskChange=True, tiltChange=True, aberChange=True)
 
+        angles = np.linspace(0, 0.02, 10)
+        self.scan_stack = self.create_scan_stack(angles, scan_part=0)
 
 # myAdd
 
@@ -150,6 +155,33 @@ class SLM_PCIeManager(SignalInterface):
         else:
             self.__logger.error("Blink SDK did not construct successfully")
             self.slm_lib.Delete_SDK()
+
+    def create_scan_stack(self, scan_angles, scan_part = 0):
+        self.maskDouble = self.__masks[0].concat(self.__masks[1])
+        self.maskTilt = self.__masksTilt[0].concat(self.__masksTilt[1])
+        self.maskAber = self.__masksAber[0].concat(self.__masksAber[1])
+        self.maskCombined = self.maskDouble + self.maskAber + self.maskTilt
+
+        scan_stack = np.zeros((len(scan_angles), self.height_.value, self.width_.value), dtype=np.uint8)
+
+        if scan_part == 0:
+            for idx, scan_angle in enumerate(scan_angles):
+                self.__maskScanLeft.setTiltAngle(scan_angle, 1)
+                self.__maskScanLeft.setTilt()
+                self.maskScan = self.__maskScanLeft.concat(self.__maskScanRight)
+                self.maskCombined = self.maskCombined + self.maskScan
+                scan_stack[idx] = self.maskCombined.image()
+        elif scan_part == 1:
+            for idx, scan_angle in enumerate(scan_angles):
+                self.__maskScanRight.setTiltAngle(scan_angle, 1)
+                self.maskScan = self.__maskScanLeft.concat(self.__maskScanRight)
+                self.maskCombined = self.maskCombined + self.maskScan
+                scan_stack[idx] = self.maskCombined.image()
+        self.__logger.debug(f"Scan stack created with shape: {scan_stack.shape}")
+        # save the scan stack
+        with h5py.File("scan_stack.h5", "w") as f:
+            f.create_dataset("scan_stack", data=scan_stack)
+        return scan_stack
 
     def upload_stack(self, stack, time_interval = 10):
         """Uploads a stack of images to the SLM with a time interval between each image
@@ -253,6 +285,14 @@ class SLM_PCIeManager(SignalInterface):
         self.__maskAberRight = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2),
                                     self.__wavelength)
         self.__maskAberRight.setBlack()
+
+    def initScanMask(self):
+        # Add scan mask
+        self.__maskScanLeft = Mask(self.__slmSize[1], int(self.__slmSize[0]/2), self.__wavelength)
+        self.__maskScanRight = Mask(self.__slmSize[1], int(self.__slmSize[0]/2), self.__wavelength)
+
+        self.__maskScanLeft.setBlack()
+        self.__maskScanRight.setBlack()
 
     def setMask(self, mask, maskMode):
         if self.__masks[mask].mask_type == MaskMode.Black and maskMode != MaskMode.Black:
