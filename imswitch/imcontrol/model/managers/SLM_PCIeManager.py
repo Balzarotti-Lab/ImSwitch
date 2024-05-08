@@ -7,6 +7,7 @@ import numpy as np
 from PIL import Image
 from scipy import signal as sg
 import h5py
+from datetime import datetime
 
 
 from imswitch.imcommon.framework import Signal, SignalInterface
@@ -69,16 +70,18 @@ class SLM_PCIeManager(SignalInterface):
         self.__maskRight = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2), self.__wavelength)
         self.__masks = [self.__maskLeft, self.__maskRight]
 
+# myAdd
+        # SLM controller initialization
+        self.constructed_okay = False
+        self.init_SLMController()
+        self.img_bit_depth = 8
+# ------------------------------------------------
+
         # tilt and aberration masks
         # self.initCorrectionMask()
         self.initTiltMask()
         self.initAberrationMask()
         self.initScanMask()
-# myAdd
-        # SLM controller initialization
-        self.constructed_okay = False
-        self.init_SLMController()
-# ------------------------------------------------
 
         self.__masksAber = [self.__maskAberLeft, self.__maskAberRight]
         self.__masksTilt = [self.__maskTiltLeft, self.__maskTiltRight]
@@ -180,7 +183,9 @@ class SLM_PCIeManager(SignalInterface):
         self.__logger.debug(f"Scan stack created with shape: {scan_stack.shape}")
         # save the scan stack
         with h5py.File("scan_stack.h5", "w") as f:
-            f.create_dataset("scan_stack", data=scan_stack)
+            date_time = datetime.now().strftime("%Y%m%d-%H%M%S")
+            dataset_name = f"scan_stack_{date_time}"
+            f.create_dataset(dataset_name, data=scan_stack)
         return scan_stack
 
     def upload_stack(self, stack, time_interval = 10):
@@ -271,25 +276,25 @@ class SLM_PCIeManager(SignalInterface):
         self.defalut_tilt_freq = 0.5
 
         self.__maskTiltLeft = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2),
-                                   self.__wavelength)
+                                   self.img_bit_depth, self.__wavelength)
         self.__maskTiltLeft.setTilt(self.__pixelsize)
         self.__maskTiltRight = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2),
-                                    self.__wavelength)
+                                    self.img_bit_depth, self.__wavelength)
         self.__maskTiltRight.setTilt(self.__pixelsize)
 
     def initAberrationMask(self):
         # Add blazed grating tilting mask
         self.__maskAberLeft = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2),
-                                   self.__wavelength)
+                                   self.img_bit_depth, self.__wavelength)
         self.__maskAberLeft.setBlack()
         self.__maskAberRight = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2),
-                                    self.__wavelength)
+                                    self.img_bit_depth, self.__wavelength)
         self.__maskAberRight.setBlack()
 
     def initScanMask(self):
         # Add scan mask
-        self.__maskScanLeft = Mask(self.__slmSize[1], int(self.__slmSize[0]/2), self.__wavelength)
-        self.__maskScanRight = Mask(self.__slmSize[1], int(self.__slmSize[0]/2), self.__wavelength)
+        self.__maskScanLeft = Mask(self.__slmSize[1], int(self.__slmSize[0]/2), self.img_bit_depth, self.__wavelength)
+        self.__maskScanRight = Mask(self.__slmSize[1], int(self.__slmSize[0]/2), self.img_bit_depth, self.__wavelength)
 
         self.__maskScanLeft.setBlack()
         self.__maskScanRight.setBlack()
@@ -406,7 +411,7 @@ class SLM_PCIeManager(SignalInterface):
 class Mask:
     """Class creating a mask to be displayed by the SLM."""
 
-    def __init__(self, height: int, width: int, wavelength: int):
+    def __init__(self, height: int, width: int, bit_depth: int, wavelength: int = 630):
         """initiates the mask as an empty array
         n,m corresponds to the width,height of the created image
         wavelength is the illumination wavelength in nm"""
@@ -425,16 +430,17 @@ class Mask:
         self.angle_rotation = 0
         self.angle_tilt = 0
         self.pixelSize = 0
-        if wavelength == 561:
-            self.value_max = 148
-        elif wavelength == 491:
-            self.value_max = 129
-        elif wavelength < 780 and wavelength > 800:
-            # Here we infer the value of the maximum with a linear approximation from the ones
-            # provided by the manufacturer
-            # Better ask them in case you need another wavelength
-            self.value_max = int(wavelength * 0.45 - 105)
-            self.__logger.warning("Caution: a linear approximation has been made")
+        self.value_max = int(2**bit_depth - 1)
+        # if wavelength == 561:
+        #     self.value_max = 148
+        # elif wavelength == 491:
+        #     self.value_max = 129
+        # elif wavelength < 780 and wavelength > 800:
+        #     # Here we infer the value of the maximum with a linear approximation from the ones
+        #     # provided by the manufacturer
+        #     # Better ask them in case you need another wavelength
+        #     self.value_max = int(wavelength * 0.45 - 105)
+        #     self.__logger.warning("Caution: a linear approximation has been made")
 
     def concat(self, maskOther):
         for mask in [self, maskOther]:
