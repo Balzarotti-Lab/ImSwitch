@@ -88,7 +88,7 @@ class SLM_PCIeManager(SignalInterface):
 
         self.update(maskChange=True, tiltChange=True, aberChange=True)
 
-        angles = np.linspace(0, 0.02, 10)
+        angles = np.linspace(0, 0.2, 10)
         self.scan_stack = self.create_scan_stack(angles, scan_part=0)
 
 # myAdd
@@ -170,7 +170,7 @@ class SLM_PCIeManager(SignalInterface):
         if scan_part == 0:
             for idx, scan_angle in enumerate(scan_angles):
                 self.__maskScanLeft.setTiltAngle(scan_angle, 1)
-                self.__maskScanLeft.setTilt()
+                self.__maskScanLeft.setTilt(self.__pixelsize)
                 self.maskScan = self.__maskScanLeft.concat(self.__maskScanRight)
                 self.maskCombined = self.maskCombined + self.maskScan
                 scan_stack[idx] = self.maskCombined.image()
@@ -519,6 +519,8 @@ class Mask:
         if pixelsize:
             self.pixelSize = pixelsize
         wavelength = self.wavelength * 10 ** -6  # conversion to mm
+        self.__logger.debug(f"Wavelength: {wavelength} mm")
+        self.__logger.debug(f"Pixel size: {self.pixelSize} mm")
         mask = np.indices((self.height, self.width), dtype="float")[1, :, :]
         # Spatial frequency, round to avoid aliasing
         f_spat = np.round(wavelength / (self.pixelSize * np.sin(self.angle_tilt)))
