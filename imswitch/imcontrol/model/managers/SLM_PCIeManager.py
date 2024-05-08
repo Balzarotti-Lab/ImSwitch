@@ -107,7 +107,7 @@ class SLM_PCIeManager(SignalInterface):
         self.board_number = c_uint(1)
         self.wait_For_Trigger = c_uint(0)
         self.flip_immediate = c_uint(0)  # only supported on the 1024
-        self.timeout_ms = c_uint(5000)
+        self.timeout_ms = c_uint(500)
 
         self.OutputPulseImageFlip = c_uint(0)
         self.OutputPulseImageRefresh = c_uint(0)  # only supported on 1920x1152, FW rev 1.8.
@@ -188,7 +188,7 @@ class SLM_PCIeManager(SignalInterface):
             f.create_dataset(dataset_name, data=scan_stack)
         return scan_stack
 
-    def upload_stack(self, stack, time_interval = 10):
+    def upload_stack(self, stack, time_interval = 10, trigger = False):
         """Uploads a stack of images to the SLM with a time interval between each image
 
         Args:
@@ -198,6 +198,11 @@ class SLM_PCIeManager(SignalInterface):
         """
         self.__logger.debug("Uploading stack")
         self.__logger.debug(f"Stack shape: {stack.shape}")
+
+        if trigger:
+            self.wait_For_Trigger = c_uint(1)
+        else:
+            self.wait_For_Trigger = c_uint(0)
 
         # check the stack is the right size
         if stack.shape[1] != self.height_.value or stack.shape[2] != self.width_.value:
@@ -211,6 +216,8 @@ class SLM_PCIeManager(SignalInterface):
             list_len = c_uint(stack.shape[0])
             st = stack.flatten()
             retVal = slm_lib.Load_sequence(self.board_number, st.ctypes.data_as(POINTER(c_ubyte)), self.height_.value*self.width_.value*Bytes.value, list_len, self.flip_immediate, self.OutputPulseImageFlip, self.OutputPulseImageRefresh,self.timeout_ms)
+
+        self.wait_For_Trigger = c_uint(0)
 
 
 
