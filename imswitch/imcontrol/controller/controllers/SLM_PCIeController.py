@@ -56,12 +56,24 @@ class SLM_PCIeController(ImConWidgetController):
         self._widget.controlPanel.splitbullButton.clicked.connect(
             lambda: self.setMask(MaskMode.Split))
 
+        self._widget.controlPanel.createScanStackButton.clicked.connect()
+
         self._widget.applyChangesButton.clicked.connect(self.applyParams)
         self._widget.sigSLMDisplayToggled.connect(self.toggleSLMDisplay)
         self._widget.sigSLMMonitorChanged.connect(self.monitorChanged)
 
         # Initial SLM display
         self.displayMask(self._master.slm_PCIeManager.maskCombined)
+
+    def createAndUploadScanStack(self):
+        initAngle = self._widget.controlPanel.initAngleSpinBox.value()
+        finalAngle = self._widget.controlPanel.finalAngleSpinBox.value()
+        angleSteps = self._widget.controlPanel.stepAngleSpinBox.value()
+
+        scan_angle = np.linspace(initAngle, finalAngle, angleSteps)
+        scan_stack = self._master.slm_PCIeManager.createScanStack(scan_angle)
+        self._master.slm_PCIeManager.uploadScanStack(scan_stack)
+
 
     def toggleSLMDisplay(self, enabled):
         self._widget.setSLMDisplayVisible(enabled)
