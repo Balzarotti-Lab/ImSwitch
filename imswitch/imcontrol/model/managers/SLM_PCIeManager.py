@@ -2,6 +2,7 @@ import enum
 import glob
 import math
 import os
+import time
 
 import numpy as np
 from PIL import Image
@@ -88,11 +89,10 @@ class SLM_PCIeManager(SignalInterface):
 
         self.update(maskChange=True, tiltChange=True, aberChange=True)
 
-        angles = np.linspace(0, 0.2, 10)
-        self.scan_stack = self.create_scan_stack(angles, scan_part=0)
+        # angles = np.linspace(0, 0.2, 10)
+        # self.scan_stack = self.create_scan_stack(angles, scan_part=0)
 
 # myAdd
-
 
     def init_SLMController(self):
 
@@ -126,7 +126,8 @@ class SLM_PCIeManager(SignalInterface):
                 self.board_number = c_uint(1)
                 self.height_ = c_uint(self.slm_lib.Get_image_height(self.board_number))
                 self.width_ = c_uint(self.slm_lib.Get_image_width(self.board_number))
-                self.depth_ = c_uint(self.slm_lib.Get_image_depth(self.board_number))  # Bits per pixel
+                self.depth_ = c_uint(self.slm_lib.Get_image_depth(
+                    self.board_number))  # Bits per pixel
                 self.bytes = c_uint(self.depth_.value//8)
                 self.center_x = c_uint(self.width_.value//2)
                 self.center_y = c_uint(self.height_.value//2)
@@ -159,13 +160,14 @@ class SLM_PCIeManager(SignalInterface):
             self.__logger.error("Blink SDK did not construct successfully")
             self.slm_lib.Delete_SDK()
 
-    def create_scan_stack(self, scan_angles, scan_part = 0):
+    def create_scan_stack(self, scan_angles, scan_part=0, save_stack = True):
         self.maskDouble = self.__masks[0].concat(self.__masks[1])
         self.maskTilt = self.__masksTilt[0].concat(self.__masksTilt[1])
         self.maskAber = self.__masksAber[0].concat(self.__masksAber[1])
         self.maskCombined = self.maskDouble + self.maskAber + self.maskTilt
 
-        scan_stack = np.zeros((len(scan_angles), self.height_.value, self.width_.value), dtype=np.uint8)
+        scan_stack = np.zeros((len(scan_angles), self.height_.value,
+                              self.width_.value), dtype=np.uint8)
 
         if scan_part == 0:
             for idx, scan_angle in enumerate(scan_angles):
@@ -181,14 +183,14 @@ class SLM_PCIeManager(SignalInterface):
                 self.maskCombined = self.maskCombined + self.maskScan
                 scan_stack[idx] = self.maskCombined.image()
         self.__logger.debug(f"Scan stack created with shape: {scan_stack.shape}")
-        # save the scan stack
-        with h5py.File("scan_stack.h5", "w") as f:
-            date_time = datetime.now().strftime("%Y%m%d-%H%M%S")
-            dataset_name = f"scan_stack_{date_time}"
-            f.create_dataset(dataset_name, data=scan_stack)
+        if save_stack:
+            with h5py.File("scan_stack.h5", "w") as f:
+                date_time = datetime.now().strftime("%Y%m%d-%H%M%S")
+                dataset_name = f"scan_stack_{date_time}"
+                f.create_dataset(dataset_name, data=scan_stack)
         return scan_stack
 
-    def upload_stack(self, stack, time_interval = 10, trigger = False):
+    def upload_stack(self, stack, trigger=False, time_interval=10):
         """Uploads a stack of images to the SLM with a time interval between each image
 
         Args:
@@ -214,12 +216,13 @@ class SLM_PCIeManager(SignalInterface):
             return
         else:
             list_len = c_uint(stack.shape[0])
+            self.stack_length = int(stack.shape[0])
             st = stack.flatten()
-            retVal = slm_lib.Load_sequence(self.board_number, st.ctypes.data_as(POINTER(c_ubyte)), self.height_.value*self.width_.value*Bytes.value, list_len, self.flip_immediate, self.OutputPulseImageFlip, self.OutputPulseImageRefresh,self.timeout_ms)
+            retVal = self.slm_lib.Load_sequence(self.board_number, st.ctypes.data_as(POINTER(c_ubyte)), self.height_.value*self.width_.value * self.bytes.value, list_len, self.flip_immediate, self.OutputPulseImageFlip, self.OutputPulseImageRefresh, self.timeout_ms)
+            self.stackUploaded = True
+
 
         self.wait_For_Trigger = c_uint(0)
-
-
 
     def upload_img(self, arr):
         # arr = arr[:, :, 0]              # takes just the first entry (R) of RGB
@@ -239,6 +242,24 @@ class SLM_PCIeManager(SignalInterface):
                 if (retVal == -1):
                     self.__logger.error("ImageWriteComplete failed, trigger never received?")
                     self.slm_lib.Delete_SDK()
+
+    def iterate_scan_stack(self, trigger=0):
+        self.__logger.debug("Iterating through scan stack")
+        if self.stackUploaded:
+            trigger = c_uint(trigger)
+            for idx in range(self.stack_length):
+                retVal = self.slm_lib.Select_image(self.board_number, c_uint(idx), trigger, self.flip_immediate, self.OutputPulseImageFlip, self.OutputPulseImageRefresh, self.timeout_ms)
+                self.__logger.debug(f"Selecting image {idx}")
+                if (retVal == -1):
+                    self.__logger.error("Select_image failed")
+                else:
+                    retVal = self.slm_lib.ImageWriteComplete(self.board_number, self.timeout_ms)
+                    if (retVal == -1):
+                        self.__logger.error("ImageWriteComplete failed")
+                # sleep for 0.5 s
+                time.sleep(0.5)
+        else:
+            self.__logger.error("No stack uploaded")
 
     def closeEvent(self):
         slm_lib.Write_image(self.board_number, self.blank_img.ctypes.data_as(POINTER(c_ubyte)),                                        # not working at the moment
@@ -300,8 +321,10 @@ class SLM_PCIeManager(SignalInterface):
 
     def initScanMask(self):
         # Add scan mask
-        self.__maskScanLeft = Mask(self.__slmSize[1], int(self.__slmSize[0]/2), self.img_bit_depth, self.__wavelength)
-        self.__maskScanRight = Mask(self.__slmSize[1], int(self.__slmSize[0]/2), self.img_bit_depth, self.__wavelength)
+        self.__maskScanLeft = Mask(self.__slmSize[1], int(
+            self.__slmSize[0]/2), self.img_bit_depth, self.__wavelength)
+        self.__maskScanRight = Mask(self.__slmSize[1], int(
+            self.__slmSize[0]/2), self.img_bit_depth, self.__wavelength)
 
         self.__maskScanLeft.setBlack()
         self.__maskScanRight.setBlack()
@@ -406,7 +429,7 @@ class SLM_PCIeManager(SignalInterface):
             self.maskTilt = self.__masksTilt[0].concat(self.__masksTilt[1])
         if aberChange:
             self.maskAber = self.__masksAber[0].concat(self.__masksAber[1])
-        self.maskCombined = self.maskDouble + self.maskAber + self.maskTilt #+ self.__maskCorrection
+        self.maskCombined = self.maskDouble + self.maskAber + self.maskTilt  # + self.__maskCorrection
         self.sigSLMMaskUpdated.emit(self.maskCombined)
 
         returnmask = self.maskDouble + self.maskAber
@@ -526,8 +549,8 @@ class Mask:
         if pixelsize:
             self.pixelSize = pixelsize
         wavelength = self.wavelength * 10 ** -6  # conversion to mm
-        self.__logger.debug(f"Wavelength: {wavelength} mm")
-        self.__logger.debug(f"Pixel size: {self.pixelSize} mm")
+        # self.__logger.debug(f"Wavelength: {wavelength:.6f} mm")
+        # self.__logger.debug(f"Pixel size: {self.pixelSize} mm")
         mask = np.indices((self.height, self.width), dtype="float")[1, :, :]
         # Spatial frequency, round to avoid aliasing
         f_spat = np.round(wavelength / (self.pixelSize * np.sin(self.angle_tilt)))

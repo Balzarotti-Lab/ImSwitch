@@ -201,14 +201,15 @@ class SLM_PCIeWidget(Widget):
         self.controlPanel.hexButton = guitools.BetterPushButton("Hex pattern")
         self.controlPanel.splitbullButton = guitools.BetterPushButton("Split pattern")
 
-        self.initAngleInput = QtWidgets.QLineEdit(self)
-        self.finalAngleInput = QtWidgets.QLineEdit(self)
-        self.stepsInput = QtWidgets.QLineEdit(self)
-        self.createScanStackButton = guitools.BetterPushButton('Create Scan Stack')
+        self.controlPanel.initAngleInput = QtWidgets.QLineEdit('0.1')
+        self.controlPanel.finalAngleInput = QtWidgets.QLineEdit('0')
+        self.controlPanel.stepsInput = QtWidgets.QLineEdit('10')
+        self.controlPanel.createScanStackButton = guitools.BetterPushButton('Create & Send Scan Stack')
         self.controlPanel.triggerMode = QtWidgets.QCheckBox('Trigger mode')
 
+
         # Connect the button to a method that will create and upload the scan stack
-        # self.createScanStackButton.clicked.connect(self.createAndUploadScanStack)
+        # self.controlPanel.createScanStackButton.clicked.connect(self.createAndUploadScanStack)
 
         # Defining layout
         self.controlPanel.arrowsFrame = QtWidgets.QFrame()
@@ -233,10 +234,10 @@ class SLM_PCIeWidget(Widget):
         self.controlPanel.arrowsLayout.addWidget(self.controlPanel.hexButton, 6, 1)
         self.controlPanel.arrowsLayout.addWidget(self.controlPanel.splitbullButton, 6, 2)
 
-        self.controlPanel.arrowsLayout.addWidget(self.initAngleInput, 4, 3)
-        self.controlPanel.arrowsLayout.addWidget(self.finalAngleInput, 4, 4)
-        self.controlPanel.arrowsLayout.addWidget(self.stepsInput, 4, 5)
-        self.controlPanel.arrowsLayout.addWidget(self.createScanStackButton, 5, 5)
+        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.initAngleInput, 4, 3)
+        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.finalAngleInput, 4, 4)
+        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.stepsInput, 4, 5)
+        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.createScanStackButton, 5, 5)
 
         # add tick box for the trigger mode
         self.controlPanel.arrowsLayout.addWidget(self.controlPanel.triggerMode, 5, 4)
@@ -280,9 +281,9 @@ class SLM_PCIeWidget(Widget):
 
     def createAndUploadScanStack(self):
         # Read the values from the input fields
-        initAngle = float(self.initAngleInput.text())
-        finalAngle = float(self.finalAngleInput.text())
-        steps = int(self.stepsInput.text())
+        initAngle = float(self.controlPanel.initAngleInput.text())
+        finalAngle = float(self.controlPanel.finalAngleInput.text())
+        steps = int(self.controlPanel.stepsInput.text())
 
         # Create the scan angles
         scan_angles = np.linspace(initAngle, finalAngle, steps)

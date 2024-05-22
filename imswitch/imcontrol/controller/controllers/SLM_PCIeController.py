@@ -56,7 +56,9 @@ class SLM_PCIeController(ImConWidgetController):
         self._widget.controlPanel.splitbullButton.clicked.connect(
             lambda: self.setMask(MaskMode.Split))
 
-        self._widget.controlPanel.createScanStackButton.clicked.connect()
+        self._widget.controlPanel.createScanStackButton.clicked.connect(
+            self.createAndUploadScanStack
+        )
 
         self._widget.applyChangesButton.clicked.connect(self.applyParams)
         self._widget.sigSLMDisplayToggled.connect(self.toggleSLMDisplay)
@@ -66,17 +68,23 @@ class SLM_PCIeController(ImConWidgetController):
         self.displayMask(self._master.slm_PCIeManager.maskCombined)
 
     def createAndUploadScanStack(self):
-        initAngle = self._widget.controlPanel.initAngleSpinBox.value()
-        finalAngle = self._widget.controlPanel.finalAngleSpinBox.value()
-        angleSteps = self._widget.controlPanel.stepAngleSpinBox.value()
+        self.__logger.debug(f'widget value: {self._widget.controlPanel.initAngleInput.text()}')
+        self.__logger.debug(f'widget value: {float(self._widget.controlPanel.initAngleInput.text())}')
+        initAngle = float(self._widget.controlPanel.initAngleInput.text())
+        finalAngle = float(self._widget.controlPanel.finalAngleInput.text())
+        angleSteps = int(self._widget.controlPanel.stepsInput.text())
+        # self._widget.controlPanel.stepsInput.value()
 
         scan_angle = np.linspace(initAngle, finalAngle, angleSteps)
-        scan_stack = self._master.slm_PCIeManager.createScanStack(scan_angle)
+        scan_stack = self._master.slm_PCIeManager.create_scan_stack(scan_angle)
 
         # read the check box for triggering the scan stack
-        trigger = self._widget.controlPanel.triggerCheckBox.isChecked()
+        trigger = self._widget.controlPanel.triggerMode.isChecked()
+        self.__logger.debug(f'trigger: {trigger}')
 
-        self._master.slm_PCIeManager.uploadScanStack(scan_stack, trigger)
+        self._master.slm_PCIeManager.upload_stack(scan_stack, trigger)
+
+        self._master.slm_PCIeManager.iterate_scan_stack(trigger)
 
     def toggleSLMDisplay(self, enabled):
         self._widget.setSLMDisplayVisible(enabled)
