@@ -205,6 +205,7 @@ class SLM_PCIeWidget(Widget):
         self.finalAngleInput = QtWidgets.QLineEdit(self)
         self.stepsInput = QtWidgets.QLineEdit(self)
         self.createScanStackButton = guitools.BetterPushButton('Create Scan Stack')
+        self.controlPanel.triggerMode = QtWidgets.QCheckBox('Trigger mode')
 
         # Connect the button to a method that will create and upload the scan stack
         # self.createScanStackButton.clicked.connect(self.createAndUploadScanStack)
@@ -236,6 +237,9 @@ class SLM_PCIeWidget(Widget):
         self.controlPanel.arrowsLayout.addWidget(self.finalAngleInput, 4, 4)
         self.controlPanel.arrowsLayout.addWidget(self.stepsInput, 4, 5)
         self.controlPanel.arrowsLayout.addWidget(self.createScanStackButton, 5, 5)
+
+        # add tick box for the trigger mode
+        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.triggerMode, 5, 4)
 
         # add labels to the angle inputs
         self.controlPanel.arrowsLayout.addWidget(QtWidgets.QLabel('Initial angle (rad)'), 3, 3)
