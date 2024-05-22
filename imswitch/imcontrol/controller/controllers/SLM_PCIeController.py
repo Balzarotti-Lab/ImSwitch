@@ -82,7 +82,12 @@ class SLM_PCIeController(ImConWidgetController):
         trigger = self._widget.controlPanel.triggerMode.isChecked()
         self.__logger.debug(f'trigger: {trigger}')
 
-        self._master.slm_PCIeManager.upload_stack(scan_stack, trigger)
+        self._master.slm_PCIeManager.upload_stack(scan_stack)
+
+        if trigger:
+            trigger = 1
+        else:
+            trigger = 0
 
         self._master.slm_PCIeManager.iterate_scan_stack(trigger)
 

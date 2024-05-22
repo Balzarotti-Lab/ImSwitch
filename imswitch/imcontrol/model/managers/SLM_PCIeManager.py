@@ -246,9 +246,13 @@ class SLM_PCIeManager(SignalInterface):
     def iterate_scan_stack(self, trigger=0):
         self.__logger.debug("Iterating through scan stack")
         if self.stackUploaded:
+            if trigger==1:
+                timeout_ms = c_uint(5000)
+            else:
+                timeout_ms = self.timeout_ms
             trigger = c_uint(trigger)
             for idx in range(self.stack_length):
-                retVal = self.slm_lib.Select_image(self.board_number, c_uint(idx), trigger, self.flip_immediate, self.OutputPulseImageFlip, self.OutputPulseImageRefresh, self.timeout_ms)
+                retVal = self.slm_lib.Select_image(self.board_number, c_uint(idx), trigger, self.flip_immediate, self.OutputPulseImageFlip, self.OutputPulseImageRefresh, timeout_ms)
                 self.__logger.debug(f"Selecting image {idx}")
                 if (retVal == -1):
                     self.__logger.error("Select_image failed")
@@ -257,7 +261,7 @@ class SLM_PCIeManager(SignalInterface):
                     if (retVal == -1):
                         self.__logger.error("ImageWriteComplete failed")
                 # sleep for 0.5 s
-                time.sleep(0.5)
+                # time.sleep(0.5)
         else:
             self.__logger.error("No stack uploaded")
 
