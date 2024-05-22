@@ -204,7 +204,7 @@ class SLM_PCIeWidget(Widget):
         self.initAngleInput = QtWidgets.QLineEdit(self)
         self.finalAngleInput = QtWidgets.QLineEdit(self)
         self.stepsInput = QtWidgets.QLineEdit(self)
-        self.createScanStackButton = QtWidgets.QPushButton('Create Scan Stack', self)
+        self.createScanStackButton = guitools.BetterPushButton('Create Scan Stack')
 
         # Connect the button to a method that will create and upload the scan stack
         # self.createScanStackButton.clicked.connect(self.createAndUploadScanStack)
@@ -274,6 +274,20 @@ class SLM_PCIeWidget(Widget):
     def setSLMDisplayMonitor(self, monitor):
         self.slmDisplay.setMonitor(monitor, updateImage=True)
 
+    def createAndUploadScanStack(self):
+        # Read the values from the input fields
+        initAngle = float(self.initAngleInput.text())
+        finalAngle = float(self.finalAngleInput.text())
+        steps = int(self.stepsInput.text())
+
+        # Create the scan angles
+        scan_angles = np.linspace(initAngle, finalAngle, steps)
+
+        # Create the scan stack
+        scan_stack = self.slmManager.create_scan_stack(scan_angles)
+
+        # Upload the scan stack
+        self.slmManager.upload_stack(scan_stack)
 
 # Copyright (C) 2020-2021 ImSwitch developers
 # This file is part of ImSwitch.
