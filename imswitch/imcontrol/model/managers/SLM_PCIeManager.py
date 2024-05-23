@@ -3,6 +3,7 @@ import glob
 import math
 import os
 import time
+from time import perf_counter
 
 import numpy as np
 from PIL import Image
@@ -247,17 +248,23 @@ class SLM_PCIeManager(SignalInterface):
         self.__logger.debug("Iterating through scan stack")
         if self.stackUploaded:
             if trigger==1:
-                timeout_ms = c_uint(5000)
+                timeout_ms = c_uint(500)
             else:
                 timeout_ms = self.timeout_ms
             trigger = c_uint(trigger)
             for idx in range(self.stack_length):
+                strart = perf_counter()
                 retVal = self.slm_lib.Select_image(self.board_number, c_uint(idx), trigger, self.flip_immediate, self.OutputPulseImageFlip, self.OutputPulseImageRefresh, timeout_ms)
-                self.__logger.debug(f"Selecting image {idx}")
+                # self.__logger.debug(f"Selecting image {idx}")
+                img_selected = perf_counter()
                 if (retVal == -1):
+                    self.__logger.debug(f"Execution of Select_image took {1e3*(img_selected-strart):.3f} ms")
                     self.__logger.error("Select_image failed")
                 else:
                     retVal = self.slm_lib.ImageWriteComplete(self.board_number, self.timeout_ms)
+                    img_written = perf_counter()
+                    self.__logger.debug(f"Execution of image selection took {1e3*(img_written-strart):.3f} ms")
+                    self.__logger.debug(f"The whole process took {1e3*(img_written-strart):.3f} ms")
                     if (retVal == -1):
                         self.__logger.error("ImageWriteComplete failed")
                 # sleep for 0.5 s
