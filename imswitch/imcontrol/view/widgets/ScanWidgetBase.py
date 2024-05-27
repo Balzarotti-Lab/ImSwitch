@@ -285,6 +285,19 @@ class ScanWidgetBase(SuperScanWidget):
             self.pxParameters['sta' + deviceName].textChanged.connect(self.sigSignalParChanged)
             self.pxParameters['end' + deviceName].textChanged.connect(self.sigSignalParChanged)
 
+        currentRow += 1
+
+        # add status message
+        self.grid.addWidget(QtWidgets.QLabel('Status messge:'), currentRow, 0)
+
+        currentRow += 1
+
+        self.statusLabel = QtWidgets.QLabel('')
+        self.grid.addWidget(self.statusLabel, currentRow, 0, 1, -1)
+
+        # print status message 'test'
+        self.printStatusMessage('test')``
+
     def isScanMode(self):
         return self.scanRadio.isChecked()
 
@@ -329,6 +342,8 @@ class ScanWidgetBase(SuperScanWidget):
     def setSeqTimePar(self, seqTimePar):
         self.seqTimePar.setText(str(round(float(1000 * seqTimePar), 3)))
 
+    def printStatusMessage(self, message):
+        self.statusLabel.setText(message)
 
 
 # Copyright (C) 2020-2021 ImSwitch developers

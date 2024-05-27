@@ -234,18 +234,22 @@ class SLM_PCIeWidget(Widget):
         self.controlPanel.arrowsLayout.addWidget(self.controlPanel.hexButton, 6, 1)
         self.controlPanel.arrowsLayout.addWidget(self.controlPanel.splitbullButton, 6, 2)
 
-        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.initAngleInput, 4, 3)
-        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.finalAngleInput, 4, 4)
-        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.stepsInput, 4, 5)
-        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.createScanStackButton, 5, 5)
+        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.initAngleInput, 2, 3)
+        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.finalAngleInput, 2, 4)
+        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.stepsInput, 2, 5)
+        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.createScanStackButton, 3, 5)
 
         # add tick box for the trigger mode
-        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.triggerMode, 5, 4)
+        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.triggerMode, 3, 4)
 
         # add labels to the angle inputs
-        self.controlPanel.arrowsLayout.addWidget(QtWidgets.QLabel('Initial angle (rad)'), 3, 3)
-        self.controlPanel.arrowsLayout.addWidget(QtWidgets.QLabel('Final angle (rad)'), 3, 4)
-        self.controlPanel.arrowsLayout.addWidget(QtWidgets.QLabel('Steps'), 3, 5)
+        self.controlPanel.arrowsLayout.addWidget(QtWidgets.QLabel('Initial angle (rad)'), 1, 3)
+        self.controlPanel.arrowsLayout.addWidget(QtWidgets.QLabel('Final angle (rad)'), 1, 4)
+        self.controlPanel.arrowsLayout.addWidget(QtWidgets.QLabel('Steps'), 1, 5)
+
+        self.controlPanel.arrowsLayout.addWidget(QtWidgets.QLabel('Status message:'), 4, 3)
+        self.controlPanel.arrowsLayout.addWidget(QtWidgets.QLabel('--'), 5, 3)
+
 
         # Definition of the box layout:
         self.controlPanel.boxLayout = QtWidgets.QVBoxLayout()
@@ -262,6 +266,8 @@ class SLM_PCIeWidget(Widget):
         self.grid.addWidget(self.applyChangesButton, 3, 0, 1, 1)
         self.grid.addLayout(self.slmDisplayLayout, 3, 1, 1, 1)
         self.grid.addWidget(self.controlPanel, 1, 1, 2, 1)
+
+        self.printStatusMessage('test')
 
     def initSLMDisplay(self, monitor):
         from imswitch.imcontrol.view import SLMDisplay
@@ -293,6 +299,9 @@ class SLM_PCIeWidget(Widget):
 
         # Upload the scan stack
         self.slmManager.upload_stack(scan_stack)
+
+    def printStatusMessage(self, message):
+        self.controlPanel.arrowsLayout.itemAtPosition(5, 3).widget().setText(message)
 
 # Copyright (C) 2020-2021 ImSwitch developers
 # This file is part of ImSwitch.
