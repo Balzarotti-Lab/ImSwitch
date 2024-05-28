@@ -296,7 +296,7 @@ class ScanWidgetBase(SuperScanWidget):
         self.grid.addWidget(self.statusLabel, currentRow, 0, 1, -1)
 
         # print status message 'test'
-        self.printStatusMessage('test')``
+        self.printStatusMessage('test')
 
     def isScanMode(self):
         return self.scanRadio.isChecked()
