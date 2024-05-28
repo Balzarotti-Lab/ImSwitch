@@ -161,6 +161,12 @@ class ScanWidgetBase(SuperScanWidget):
         self.seqTimePar.textChanged.connect(self.sigSeqTimeParChanged)
         self.contLaserPulsesRadio.toggled.connect(self.sigContLaserPulsesToggled)
 
+        self.scanRegimeSLM = QtWidgets.QRadioButton('SLM scan (using this one so far)')
+        self.scanRegimeSLM.setChecked(True)
+        self.scanRegimeEOD = QtWidgets.QRadioButton('EOD scan (not implemented)')
+        self.contLaserPulsesRadio.toggled.connect(self.sigContLaserPulsesToggled)
+
+
     def initControls(self, positionerNames, TTLDeviceNames, TTLTimeUnits):
         currentRow = 0
         self.scanDims = list(positionerNames)
@@ -178,6 +184,11 @@ class ScanWidgetBase(SuperScanWidget):
         )
         self.grid.addWidget(self.repeatBox, currentRow, 5)
         self.grid.addWidget(self.scanButton, currentRow, 6)
+        currentRow += 1
+
+        self.grid.addWidget(QtWidgets.QLabel('Scan mode:'), currentRow, 0)
+        self.grid.addWidget(self.scanRegimeSLM, currentRow, 2)
+        self.grid.addWidget(self.scanRegimeEOD, currentRow, 3)
         currentRow += 1
 
         # Add space item to make the grid look nicer
