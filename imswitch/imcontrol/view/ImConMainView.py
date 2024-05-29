@@ -65,8 +65,9 @@ class ImConMainView(QtWidgets.QMainWindow):
             'Rotator': _DockInfo(name='Rotator', yPosition=1),
             'MotCorr': _DockInfo(name='Motorized Correction Collar', yPosition=1),
             'SLM': _DockInfo(name='SLM', yPosition=2),
-            'Scan': _DockInfo(name='Scan', yPosition=2),
+            'SLM_PCIe': _DockInfo(name='SLM_PCIe', yPosition=2),
             'RotationScan': _DockInfo(name='RotationScan', yPosition=2),
+            'Scan': _DockInfo(name='Scan', yPosition=3),
             'BeadRec': _DockInfo(name='Bead Rec', yPosition=3),
             'AlignmentLine': _DockInfo(name='Alignment Tool', yPosition=3),
             'AlignAverage': _DockInfo(name='Axial Alignment Tool', yPosition=3),
@@ -78,7 +79,6 @@ class ImConMainView(QtWidgets.QMainWindow):
         }
         leftDockInfos = {
             'Settings': _DockInfo(name='Detector Settings', yPosition=0),
-            'SLM_PCIe': _DockInfo(name='SLM_PCIe', yPosition=2),
             'View': _DockInfo(name='Image Controls', yPosition=1),
             'Recording': _DockInfo(name='Recording', yPosition=2),
             'Console': _DockInfo(name='Console', yPosition=3)
