@@ -63,8 +63,7 @@ class SLM_PCIeManager(SignalInterface):
         cdll.LoadLibrary(_baseDataFilesDir + "\\libs\\slm_PCIe\\Blink_C_wrapper")
         self.slm_lib = CDLL("Blink_C_wrapper")
 
-        cdll.LoadLibrary(
-            "C:\\Program Files\\Meadowlark Optics\\Blink OverDrive Plus\\SDK\\ImageGen")
+        cdll.LoadLibrary(_baseDataFilesDir + "\\libs\\slm_PCIe\\ImageGen")
         self.deleteLaterimage_lib = CDLL("ImageGen")
 
         # create the masks for left and right side of the SLM
