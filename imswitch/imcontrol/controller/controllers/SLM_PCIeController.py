@@ -64,10 +64,14 @@ class SLM_PCIeController(ImConWidgetController):
         self._widget.sigSLMDisplayToggled.connect(self.toggleSLMDisplay)
         self._widget.sigSLMMonitorChanged.connect(self.monitorChanged)
 
+        self._commChannel.sigGetReadyForSLMScan.connect(lambda: self.createAndUploadScanStack(True))
+
         # Initial SLM display
         self.displayMask(self._master.slm_PCIeManager.maskCombined)
 
-    def createAndUploadScanStack(self):
+    def createAndUploadScanStack(self, ext_signal=False):
+        if ext_signal:
+            self.__logger.debug('Received external signal to start scan stack.')
         self.__logger.debug(f'widget value: {self._widget.controlPanel.initAngleInput.text()}')
         self.__logger.debug(f'widget value: {float(self._widget.controlPanel.initAngleInput.text())}')
         initAngle = float(self._widget.controlPanel.initAngleInput.text())
@@ -89,7 +93,12 @@ class SLM_PCIeController(ImConWidgetController):
         else:
             trigger = 0
 
-        self._master.slm_PCIeManager.iterate_scan_stack(trigger)
+        if ext_signal:
+            self.__logger.debug('Sending signal to start the the triggers with the nidaq')
+            self._commChannel.sigStartSLMScanTrigger.emit()
+            self._master.slm_PCIeManager.iterate_scan_stack(trigger)
+        else:
+            self._master.slm_PCIeManager.iterate_scan_stack(trigger)
 
     def toggleSLMDisplay(self, enabled):
         self._widget.setSLMDisplayVisible(enabled)

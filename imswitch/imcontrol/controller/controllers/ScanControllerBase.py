@@ -23,6 +23,8 @@ class ScanControllerBase(SuperScanController):
         # Connect ScanWidget signals
         self._widget.sigContLaserPulsesToggled.connect(self.setContLaserPulses)
 
+        self._commChannel.sigStartSLMScanTrigger.connect(self.runSLMScan)
+
     def setParameters(self):
         self.settingParameters = True
         try:
@@ -81,11 +83,19 @@ class ScanControllerBase(SuperScanController):
                     position = self._analogParameterDict['axis_centerpos'][index]
                     self._master.positionersManager[positionerName].setPosition(position, 0)
                     self._logger.debug(f'set {positionerName} center to {position} before scan')
-            # run scan
-            self._master.nidaqManager.runScan(self.signalDict, self.scanInfoDict)
+
+            # emit signal to start SLM scan
+            self._commChannel.sigGetReadyForSLMScan.emit()
+            # # run scan
+            # self._master.nidaqManager.runScan(self.signalDict, self.scanInfoDict)
         except Exception:
             self._logger.error(traceback.format_exc())
             self.isRunning = False
+
+    def runSLMScan(self):
+        self._logger.debug('Signal to start SLM scan recieved.')
+        # run scan
+        self._master.nidaqManager.runScan(self.signalDict, self.scanInfoDict)
 
     def scanDone(self):
         self.isRunning = False
