@@ -87,6 +87,7 @@ class SLM_PCIeManager(SignalInterface):
 
         self.__masksAber = [self.__maskAberLeft, self.__maskAberRight]
         self.__masksTilt = [self.__maskTiltLeft, self.__maskTiltRight]
+        self.__masksScan = [self.__maskScanLeft, self.__maskScanRight]
 
         self.update(maskChange=True, tiltChange=True, aberChange=True)
 
@@ -382,8 +383,8 @@ class SLM_PCIeManager(SignalInterface):
         return centerCoords
 
     def setCenters(self, centerCoords):
-        for idx, (mask, masktilt, maskaber) in enumerate(zip(self.__masks, self.__masksTilt,
-                                                             self.__masksAber)):
+        for idx, (mask, masktilt, maskaber, maskscan) in enumerate(zip(self.__masks, self.__masksTilt,
+                                                             self.__masksAber, self.__masksScan)):
             if idx == 0:
                 center = (centerCoords["left"]["xcenter"], centerCoords["left"]["ycenter"])
             elif idx == 1:
@@ -391,6 +392,7 @@ class SLM_PCIeManager(SignalInterface):
             mask.setCenter(center)
             masktilt.setCenter(center)
             maskaber.setCenter(center)
+            maskscan.setCenter(center)
 
     def setGeneral(self, general_info):
         self.setRadius(general_info["radius"])
