@@ -145,7 +145,7 @@ class ScanWidgetBase(SuperScanWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.seqTimePar = QtWidgets.QLineEdit('1')  # ms
+        self.seqTimePar = QtWidgets.QLineEdit('100')  # ms
 
         self.scanPar = {
                         'seqTime': self.seqTimePar
@@ -160,6 +160,12 @@ class ScanWidgetBase(SuperScanWidget):
         # Connect signals
         self.seqTimePar.textChanged.connect(self.sigSeqTimeParChanged)
         self.contLaserPulsesRadio.toggled.connect(self.sigContLaserPulsesToggled)
+
+        self.scanRegimeSLM = QtWidgets.QRadioButton('SLM scan (using this one so far)')
+        self.scanRegimeSLM.setChecked(True)
+        self.scanRegimeEOD = QtWidgets.QRadioButton('EOD scan (not implemented)')
+        self.contLaserPulsesRadio.toggled.connect(self.sigContLaserPulsesToggled)
+
 
     def initControls(self, positionerNames, TTLDeviceNames, TTLTimeUnits):
         currentRow = 0
@@ -178,6 +184,11 @@ class ScanWidgetBase(SuperScanWidget):
         )
         self.grid.addWidget(self.repeatBox, currentRow, 5)
         self.grid.addWidget(self.scanButton, currentRow, 6)
+        currentRow += 1
+
+        self.grid.addWidget(QtWidgets.QLabel('Scan mode:'), currentRow, 0)
+        self.grid.addWidget(self.scanRegimeSLM, currentRow, 2)
+        self.grid.addWidget(self.scanRegimeEOD, currentRow, 3)
         currentRow += 1
 
         # Add space item to make the grid look nicer
@@ -285,6 +296,19 @@ class ScanWidgetBase(SuperScanWidget):
             self.pxParameters['sta' + deviceName].textChanged.connect(self.sigSignalParChanged)
             self.pxParameters['end' + deviceName].textChanged.connect(self.sigSignalParChanged)
 
+        currentRow += 1
+
+        # add status message
+        self.grid.addWidget(QtWidgets.QLabel('Status messge:'), currentRow, 0)
+
+        currentRow += 1
+
+        self.statusLabel = QtWidgets.QLabel('')
+        self.grid.addWidget(self.statusLabel, currentRow, 0, 1, -1)
+
+        # print status message 'test'
+        self.printStatusMessage('test')
+
     def isScanMode(self):
         return self.scanRadio.isChecked()
 
@@ -329,6 +353,8 @@ class ScanWidgetBase(SuperScanWidget):
     def setSeqTimePar(self, seqTimePar):
         self.seqTimePar.setText(str(round(float(1000 * seqTimePar), 3)))
 
+    def printStatusMessage(self, message):
+        self.statusLabel.setText(message)
 
 
 # Copyright (C) 2020-2021 ImSwitch developers

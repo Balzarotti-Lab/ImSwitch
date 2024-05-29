@@ -56,12 +56,49 @@ class SLM_PCIeController(ImConWidgetController):
         self._widget.controlPanel.splitbullButton.clicked.connect(
             lambda: self.setMask(MaskMode.Split))
 
+        self._widget.controlPanel.createScanStackButton.clicked.connect(
+            self.createAndUploadScanStack
+        )
+
         self._widget.applyChangesButton.clicked.connect(self.applyParams)
         self._widget.sigSLMDisplayToggled.connect(self.toggleSLMDisplay)
         self._widget.sigSLMMonitorChanged.connect(self.monitorChanged)
 
+        self._commChannel.sigGetReadyForSLMScan.connect(lambda: self.createAndUploadScanStack(True))
+
         # Initial SLM display
         self.displayMask(self._master.slm_PCIeManager.maskCombined)
+
+    def createAndUploadScanStack(self, ext_signal=False):
+        if ext_signal:
+            self.__logger.debug('Received external signal to start scan stack.')
+        self.__logger.debug(f'widget value: {self._widget.controlPanel.initAngleInput.text()}')
+        self.__logger.debug(f'widget value: {float(self._widget.controlPanel.initAngleInput.text())}')
+        initAngle = float(self._widget.controlPanel.initAngleInput.text())
+        finalAngle = float(self._widget.controlPanel.finalAngleInput.text())
+        angleSteps = int(self._widget.controlPanel.stepsInput.text())
+        # self._widget.controlPanel.stepsInput.value()
+
+        scan_angle = np.linspace(initAngle, finalAngle, angleSteps)
+        scan_stack = self._master.slm_PCIeManager.create_scan_stack(scan_angle)
+
+        # read the check box for triggering the scan stack
+        trigger = self._widget.controlPanel.triggerMode.isChecked()
+        self.__logger.debug(f'trigger: {trigger}')
+
+        self._master.slm_PCIeManager.upload_stack(scan_stack)
+
+        if trigger:
+            trigger = 1
+        else:
+            trigger = 0
+
+        if ext_signal:
+            self.__logger.debug('Sending signal to start the the triggers with the nidaq')
+            self._commChannel.sigStartSLMScanTrigger.emit()
+            self._master.slm_PCIeManager.iterate_scan_stack(trigger)
+        else:
+            self._master.slm_PCIeManager.iterate_scan_stack(trigger)
 
     def toggleSLMDisplay(self, enabled):
         self._widget.setSLMDisplayVisible(enabled)
@@ -75,6 +112,11 @@ class SLM_PCIeController(ImConWidgetController):
 
         arr = maskCombined.image()
 
+# myAdd
+        self._master.slm_PCIeManager.upload_img(
+            arr)                                # change for SLM-PCIe
+# ----------------------------------------
+
         # # Padding: Like they do in the software
         # pad = np.zeros((1024, 8), dtype=np.uint8)
         # arr = np.append(arr, pad, 1)
@@ -86,22 +128,20 @@ class SLM_PCIeController(ImConWidgetController):
             # Array is grayscale
             arrGray = arr.copy()
             arrGray.shape = h, w, 1
-            img = np.concatenate((arrGray, arrGray, arrGray), axis=2)
+            displImg = np.concatenate((arrGray, arrGray, arrGray), axis=2)
+            self._widget.updateSLMDisplay(displImg)
         else:
-            img = arr
-
-        self._widget.updateSLMDisplay(img)
-# myAdd
-        self._master.slm_PCIeManager.upload_img(img)                                # change for SLM-PCIe
-# ----------------------------------------
-
+            displImg = arr
+            self._widget.updateSLMDisplay(displImg)
 
     # Button pressed functions
+
     def moveMask(self, direction):
         amount = self._widget.controlPanel.incrementSpinBox.value()
         mask = self._widget.controlPanel.maskComboBox.currentIndex()
         self._master.slm_PCIeManager.moveMask(mask, direction, amount)
-        image = self._master.slm_PCIeManager.update(maskChange=True, aberChange=True, tiltChange=True)
+        image = self._master.slm_PCIeManager.update(
+            maskChange=True, aberChange=True, tiltChange=True)
         self.updateDisplayImage(image)
 
     def saveParams(self):
@@ -133,7 +173,7 @@ class SLM_PCIeController(ImConWidgetController):
             generalparamnames = ["radius", "sigma", "rotationAngle", "tiltAngle"]
             state_general = {generalparamname: float(
                 generalParams.param("general").param(generalparamname).value()) for generalparamname
-                             in generalparamnames}
+                in generalparamnames}
 
         if aberParams is not None:
             # create dict for aberration params
@@ -185,7 +225,8 @@ class SLM_PCIeController(ImConWidgetController):
         self._master.slm_PCIeManager.setCenters(state_pos)
         self._master.slm_PCIeManager.setAberrationFactors(state_aber)
         self._master.slm_PCIeManager.saveState(state_general, state_pos, state_aber)
-        image = self._master.slm_PCIeManager.update(maskChange=True, tiltChange=True, aberChange=True)
+        image = self._master.slm_PCIeManager.update(
+            maskChange=True, tiltChange=True, aberChange=True)
         self.updateDisplayImage(image)
 
     def setParamTree(self, state_general, state_aber):
@@ -212,10 +253,11 @@ class SLM_PCIeController(ImConWidgetController):
         mask = self._widget.controlPanel.maskComboBox.currentIndex()
         if maskMode != MaskMode.Black:
             slm_info_dict = self.getInfoDict(generalParams=self._widget.slmParameterTree.p,
-                                            aberParams=self._widget.aberParameterTree.p)
+                                             aberParams=self._widget.aberParameterTree.p)
             self.applyAberrations(slm_info_dict["aber"], mask)
         self._master.slm_PCIeManager.setMask(mask, maskMode)
-        image = self._master.slm_PCIeManager.update(maskChange=True, tiltChange=True, aberChange=True)
+        image = self._master.slm_PCIeManager.update(
+            maskChange=True, tiltChange=True, aberChange=True)
         self.updateDisplayImage(image)
 
     def applyParams(self):
@@ -223,10 +265,11 @@ class SLM_PCIeController(ImConWidgetController):
                                          aberParams=self._widget.aberParameterTree.p)
         self.applyGeneral(slm_info_dict["general"])
         self.applyAberrations(slm_info_dict["aber"])
-        image = self._master.slm_PCIeManager.update(maskChange=True, tiltChange=True, aberChange=True)
+        image = self._master.slm_PCIeManager.update(
+            maskChange=True, tiltChange=True, aberChange=True)
         self.updateDisplayImage(image)
         self._master.slm_PCIeManager.saveState(state_general=slm_info_dict["general"],
-                                          state_aber=slm_info_dict["aber"])
+                                               state_aber=slm_info_dict["aber"])
 
     def applyGeneral(self, info_dict):
         self._master.slm_PCIeManager.setGeneral(info_dict)

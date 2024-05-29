@@ -75,24 +75,24 @@ class SLM_PCIeWidget(Widget):
             {'name': 'obliqueAstigmatism', 'type': 'float', 'value': 0,
              'limits': (-aberlim, aberlim), 'step': 0.01}
         ]},
-                           {'name': 'right', 'type': 'group', 'children': [
-                               {'name': 'tilt', 'type': 'float', 'value': 0,
+            {'name': 'right', 'type': 'group', 'children': [
+                {'name': 'tilt', 'type': 'float', 'value': 0,
+                 'limits': (-aberlim, aberlim), 'step': 0.01},
+                {'name': 'tip', 'type': 'float', 'value': 0,
                                 'limits': (-aberlim, aberlim), 'step': 0.01},
-                               {'name': 'tip', 'type': 'float', 'value': 0,
-                                'limits': (-aberlim, aberlim), 'step': 0.01},
-                               {'name': 'defocus', 'type': 'float', 'value': 0,
-                                'limits': (-aberlim, aberlim), 'step': 0.01},
-                               {'name': 'spherical', 'type': 'float', 'value': 0,
-                                'limits': (-aberlim, aberlim), 'step': 0.01},
-                               {'name': 'verticalComa', 'type': 'float', 'value': 0,
-                                'limits': (-aberlim, aberlim), 'step': 0.01},
-                               {'name': 'horizontalComa', 'type': 'float', 'value': 0,
-                                'limits': (-aberlim, aberlim), 'step': 0.01},
-                               {'name': 'verticalAstigmatism', 'type': 'float', 'value': 0,
-                                'limits': (-aberlim, aberlim), 'step': 0.01},
-                               {'name': 'obliqueAstigmatism', 'type': 'float', 'value': 0,
-                                'limits': (-aberlim, aberlim), 'step': 0.01}
-                           ]}]
+                {'name': 'defocus', 'type': 'float', 'value': 0,
+                 'limits': (-aberlim, aberlim), 'step': 0.01},
+                {'name': 'spherical', 'type': 'float', 'value': 0,
+                 'limits': (-aberlim, aberlim), 'step': 0.01},
+                {'name': 'verticalComa', 'type': 'float', 'value': 0,
+                 'limits': (-aberlim, aberlim), 'step': 0.01},
+                {'name': 'horizontalComa', 'type': 'float', 'value': 0,
+                 'limits': (-aberlim, aberlim), 'step': 0.01},
+                {'name': 'verticalAstigmatism', 'type': 'float', 'value': 0,
+                 'limits': (-aberlim, aberlim), 'step': 0.01},
+                {'name': 'obliqueAstigmatism', 'type': 'float', 'value': 0,
+                 'limits': (-aberlim, aberlim), 'step': 0.01}
+            ]}]
         self.aberParameterTree.setStyleSheet("""
         QTreeView::item, QAbstractSpinBox, QComboBox {
             padding-top: 0;
@@ -201,6 +201,16 @@ class SLM_PCIeWidget(Widget):
         self.controlPanel.hexButton = guitools.BetterPushButton("Hex pattern")
         self.controlPanel.splitbullButton = guitools.BetterPushButton("Split pattern")
 
+        self.controlPanel.initAngleInput = QtWidgets.QLineEdit('0.1')
+        self.controlPanel.finalAngleInput = QtWidgets.QLineEdit('0')
+        self.controlPanel.stepsInput = QtWidgets.QLineEdit('10')
+        self.controlPanel.createScanStackButton = guitools.BetterPushButton('Create & Send Scan Stack')
+        self.controlPanel.triggerMode = QtWidgets.QCheckBox('Trigger mode')
+
+
+        # Connect the button to a method that will create and upload the scan stack
+        # self.controlPanel.createScanStackButton.clicked.connect(self.createAndUploadScanStack)
+
         # Defining layout
         self.controlPanel.arrowsFrame = QtWidgets.QFrame()
         self.controlPanel.arrowsLayout = QtWidgets.QGridLayout()
@@ -212,8 +222,8 @@ class SLM_PCIeWidget(Widget):
         self.controlPanel.arrowsLayout.addWidget(self.controlPanel.rightButton, 1, 2)
         self.controlPanel.arrowsLayout.addWidget(self.controlPanel.downButton, 2, 1)
 
-        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.loadButton, 0, 3)
-        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.saveButton, 1, 3)
+        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.loadButton, 0, 4)
+        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.saveButton, 0, 5)
 
         self.controlPanel.arrowsLayout.addWidget(self.controlPanel.donutButton, 3, 1)
         self.controlPanel.arrowsLayout.addWidget(self.controlPanel.tophatButton, 3, 2)
@@ -223,6 +233,23 @@ class SLM_PCIeWidget(Widget):
         self.controlPanel.arrowsLayout.addWidget(self.controlPanel.quadrantButton, 5, 2)
         self.controlPanel.arrowsLayout.addWidget(self.controlPanel.hexButton, 6, 1)
         self.controlPanel.arrowsLayout.addWidget(self.controlPanel.splitbullButton, 6, 2)
+
+        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.initAngleInput, 2, 3)
+        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.finalAngleInput, 2, 4)
+        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.stepsInput, 2, 5)
+        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.createScanStackButton, 3, 5)
+
+        # add tick box for the trigger mode
+        self.controlPanel.arrowsLayout.addWidget(self.controlPanel.triggerMode, 3, 4)
+
+        # add labels to the angle inputs
+        self.controlPanel.arrowsLayout.addWidget(QtWidgets.QLabel('Initial angle (rad)'), 1, 3)
+        self.controlPanel.arrowsLayout.addWidget(QtWidgets.QLabel('Final angle (rad)'), 1, 4)
+        self.controlPanel.arrowsLayout.addWidget(QtWidgets.QLabel('Steps'), 1, 5)
+
+        self.controlPanel.arrowsLayout.addWidget(QtWidgets.QLabel('Status message:'), 4, 3)
+        self.controlPanel.arrowsLayout.addWidget(QtWidgets.QLabel('--'), 5, 3)
+
 
         # Definition of the box layout:
         self.controlPanel.boxLayout = QtWidgets.QVBoxLayout()
@@ -240,6 +267,8 @@ class SLM_PCIeWidget(Widget):
         self.grid.addLayout(self.slmDisplayLayout, 3, 1, 1, 1)
         self.grid.addWidget(self.controlPanel, 1, 1, 2, 1)
 
+        self.printStatusMessage('test')
+
     def initSLMDisplay(self, monitor):
         from imswitch.imcontrol.view import SLMDisplay
         self.slmDisplay = SLMDisplay(self, monitor)
@@ -256,6 +285,23 @@ class SLM_PCIeWidget(Widget):
     def setSLMDisplayMonitor(self, monitor):
         self.slmDisplay.setMonitor(monitor, updateImage=True)
 
+    def createAndUploadScanStack(self):
+        # Read the values from the input fields
+        initAngle = float(self.controlPanel.initAngleInput.text())
+        finalAngle = float(self.controlPanel.finalAngleInput.text())
+        steps = int(self.controlPanel.stepsInput.text())
+
+        # Create the scan angles
+        scan_angles = np.linspace(initAngle, finalAngle, steps)
+
+        # Create the scan stack
+        scan_stack = self.slmManager.create_scan_stack(scan_angles)
+
+        # Upload the scan stack
+        self.slmManager.upload_stack(scan_stack)
+
+    def printStatusMessage(self, message):
+        self.controlPanel.arrowsLayout.itemAtPosition(5, 3).widget().setText(message)
 
 # Copyright (C) 2020-2021 ImSwitch developers
 # This file is part of ImSwitch.
