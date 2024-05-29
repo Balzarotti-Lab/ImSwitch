@@ -145,7 +145,7 @@ class ScanWidgetBase(SuperScanWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.seqTimePar = QtWidgets.QLineEdit('1')  # ms
+        self.seqTimePar = QtWidgets.QLineEdit('100')  # ms
 
         self.scanPar = {
                         'seqTime': self.seqTimePar
