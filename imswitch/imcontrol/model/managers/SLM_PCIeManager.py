@@ -458,6 +458,7 @@ class Mask:
         n,m corresponds to the width,height of the created image
         wavelength is the illumination wavelength in nm"""
         self.__logger = initLogger(self, tryInheritParent=True)
+        self.__logger.debug(f"Init mask with bit_depth: {bit_depth}")
         self.zeroimg = np.zeros((height, width), dtype=np.uint8)
         self.img = np.zeros((height, width), dtype=np.uint8)
         self.height = height
