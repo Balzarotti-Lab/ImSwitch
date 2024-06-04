@@ -65,18 +65,17 @@ class SLM_PCIeManager(SignalInterface):
 
         cdll.LoadLibrary(_baseDataFilesDir + "\\libs\\slm_PCIe\\ImageGen")
         self.deleteLaterimage_lib = CDLL("ImageGen")
-
-        # create the masks for left and right side of the SLM
-        self.__maskLeft = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2), self.__wavelength)
-        self.__maskRight = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2), self.__wavelength)
-        self.__masks = [self.__maskLeft, self.__maskRight]
-
 # myAdd
         # SLM controller initialization
         self.constructed_okay = False
         self.init_SLMController()
         self.img_bit_depth = 8
 # ------------------------------------------------
+
+        # create the masks for left and right side of the SLM
+        self.__maskLeft = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2), self.img_bit_depth)
+        self.__maskRight = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2), self.img_bit_depth)
+        self.__masks = [self.__maskLeft, self.__maskRight]
 
         # tilt and aberration masks
         # self.initCorrectionMask()
@@ -440,6 +439,7 @@ class SLM_PCIeManager(SignalInterface):
             mask.setTiltAngle(tilt_angle, inverts[idx])
 
     def update(self, maskChange=False, tiltChange=False, aberChange=False):
+        self.__logger.debug("running update method")
         if maskChange:
             self.maskDouble = self.__masks[0].concat(self.__masks[1])
         if tiltChange:
