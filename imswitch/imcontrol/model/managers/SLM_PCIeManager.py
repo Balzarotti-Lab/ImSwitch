@@ -791,6 +791,7 @@ class Mask:
         return "image of the mask"
 
     def __add__(self, other):
+        self.__logger.debug(f"Adding two masks togeather")
         if self.height == other.height and self.width == other.width:
             out = Mask(self.height, self.width, self.wavelength)
             out.load(((self.image() + other.image()) % (self.value_max + 1)).astype(np.uint8))
