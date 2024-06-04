@@ -531,7 +531,20 @@ class Mask:
     def pi2uint8(self):
         """Method converting a phase image (values from 0 to 2Pi) into a uint8
         image"""
+        # print debug log with max, min value, shape and type of the image
+        self.__logger.debug(f"Max value: {np.max(self.img)}")
+        self.__logger.debug(f"Min value: {np.min(self.img)}")
+        self.__logger.debug(f"Shape: {self.img.shape}")
+        self.__logger.debug(f"Type: {self.img.dtype}")
+        self.__logger.debug(f"Multiplied by {self.value_max / (2 * math.pi)}")
+        self.__logger.debug("--------------------")
         self.img *= self.value_max / (2 * math.pi)
+        # print debug log with max, min value, shape and type of the image
+        self.__logger.debug(f"Max value: {np.max(self.img)}")
+        self.__logger.debug(f"Min value: {np.min(self.img)}")
+        self.__logger.debug(f"Shape: {self.img.shape}")
+        self.__logger.debug(f"Type: {self.img.dtype}")
+        self.__logger.debug("===================================")
         self.img = np.round(self.img).astype(np.uint8)
 
     def load(self, img):
