@@ -536,6 +536,7 @@ class Mask:
         self.__logger.debug(f"Min value: {np.min(self.img)}")
         self.__logger.debug(f"Shape: {self.img.shape}")
         self.__logger.debug(f"Type: {self.img.dtype}")
+        self.__logger.debug(f"self.value_max: {self.value_max}")
         self.__logger.debug(f"Multiplied by {self.value_max / (2 * math.pi)}")
         self.__logger.debug("--------------------")
         self.img *= self.value_max / (2 * math.pi)
