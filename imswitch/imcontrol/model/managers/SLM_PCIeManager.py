@@ -80,9 +80,13 @@ class SLM_PCIeManager(SignalInterface):
 
         # tilt and aberration masks
         # self.initCorrectionMask()
+        self.__logger.debug("Init tilt mask")
         self.initTiltMask()
+        self.__logger.debug("Init aberration mask")
         self.initAberrationMask()
+        self.__logger.debug("Init scan mask")
         self.initScanMask()
+        self.__logger.debug("Masks in the __init__ method initialized")
 
         self.__masksAber = [self.__maskAberLeft, self.__maskAberRight]
         self.__masksTilt = [self.__maskTiltLeft, self.__maskTiltRight]
@@ -339,6 +343,7 @@ class SLM_PCIeManager(SignalInterface):
 
         self.__maskScanLeft.setBlack()
         self.__maskScanRight.setBlack()
+        self.__logger.debug(f"self.bit_depth at the end of scanMask init: {self.img_bit_depth}")
 
     def setMask(self, mask, maskMode):
         if self.__masks[mask].mask_type == MaskMode.Black and maskMode != MaskMode.Black:
