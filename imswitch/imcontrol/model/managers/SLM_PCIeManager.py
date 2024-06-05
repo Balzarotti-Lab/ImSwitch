@@ -65,18 +65,17 @@ class SLM_PCIeManager(SignalInterface):
 
         cdll.LoadLibrary(_baseDataFilesDir + "\\libs\\slm_PCIe\\ImageGen")
         self.deleteLaterimage_lib = CDLL("ImageGen")
-
-        # create the masks for left and right side of the SLM
-        self.__maskLeft = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2), self.__wavelength)
-        self.__maskRight = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2), self.__wavelength)
-        self.__masks = [self.__maskLeft, self.__maskRight]
-
 # myAdd
         # SLM controller initialization
         self.constructed_okay = False
         self.init_SLMController()
         self.img_bit_depth = 8
 # ------------------------------------------------
+
+        # create the masks for left and right side of the SLM
+        self.__maskLeft = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2), self.img_bit_depth)
+        self.__maskRight = Mask(self.__slmSize[1], int(self.__slmSize[0] / 2), self.img_bit_depth)
+        self.__masks = [self.__maskLeft, self.__maskRight]
 
         # tilt and aberration masks
         # self.initCorrectionMask()
@@ -339,6 +338,7 @@ class SLM_PCIeManager(SignalInterface):
 
         self.__maskScanLeft.setBlack()
         self.__maskScanRight.setBlack()
+        self.__logger.debug(f"self.bit_depth at the end of scanMask init: {self.img_bit_depth}")
 
     def setMask(self, mask, maskMode):
         if self.__masks[mask].mask_type == MaskMode.Black and maskMode != MaskMode.Black:
@@ -435,6 +435,7 @@ class SLM_PCIeManager(SignalInterface):
             mask.setTiltAngle(tilt_angle, inverts[idx])
 
     def update(self, maskChange=False, tiltChange=False, aberChange=False):
+        self.__logger.debug("running update method")
         if maskChange:
             self.maskDouble = self.__masks[0].concat(self.__masks[1])
         if tiltChange:
@@ -462,6 +463,7 @@ class Mask:
         self.img = np.zeros((height, width), dtype=np.uint8)
         self.height = height
         self.width = width
+        self.bit_depth = bit_depth
         self.value_max = 255
         self.centerx = self.height // 2
         self.centery = self.width // 2
@@ -488,7 +490,7 @@ class Mask:
         for mask in [self, maskOther]:
             mask.updateImage()
             mask.setCircular()
-        maskCombined = Mask(self.height, self.width * 2, self.wavelength)
+        maskCombined = Mask(self.height, self.width * 2, self.bit_depth, self.wavelength)
         imgCombined = np.concatenate((self.img, maskOther.img), axis=1)
         maskCombined.loadArray(imgCombined)
         return maskCombined
@@ -772,7 +774,7 @@ class Mask:
 
     def __add__(self, other):
         if self.height == other.height and self.width == other.width:
-            out = Mask(self.height, self.width, self.wavelength)
+            out = Mask(self.height, self.width, self.bit_depth, self.wavelength)
             out.load(((self.image() + other.image()) % (self.value_max + 1)).astype(np.uint8))
             return out
         else:
