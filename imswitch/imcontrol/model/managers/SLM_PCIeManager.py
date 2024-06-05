@@ -468,6 +468,7 @@ class Mask:
         self.img = np.zeros((height, width), dtype=np.uint8)
         self.height = height
         self.width = width
+        self.bit_depth = bit_depth
         self.value_max = 255
         self.centerx = self.height // 2
         self.centery = self.width // 2
@@ -494,7 +495,7 @@ class Mask:
         for mask in [self, maskOther]:
             mask.updateImage()
             mask.setCircular()
-        maskCombined = Mask(self.height, self.width * 2, self.wavelength)
+        maskCombined = Mask(self.height, self.width * 2, self.bit_depth, self.wavelength)
         imgCombined = np.concatenate((self.img, maskOther.img), axis=1)
         maskCombined.loadArray(imgCombined)
         return maskCombined
@@ -793,7 +794,7 @@ class Mask:
     def __add__(self, other):
         self.__logger.debug(f"Adding two masks togeather")
         if self.height == other.height and self.width == other.width:
-            out = Mask(self.height, self.width, self.wavelength)
+            out = Mask(self.height, self.width, self.bit_depth, self.wavelength)
             out.load(((self.image() + other.image()) % (self.value_max + 1)).astype(np.uint8))
             return out
         else:
