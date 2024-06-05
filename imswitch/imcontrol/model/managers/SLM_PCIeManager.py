@@ -454,7 +454,7 @@ class SLM_PCIeManager(SignalInterface):
 class Mask:
     """Class creating a mask to be displayed by the SLM."""
 
-    def __init__(self, height: int, width: int, bit_depth: int, wavelength: int = 50):
+    def __init__(self, height: int, width: int, bit_depth: int, wavelength: int = 630):
         """initiates the mask as an empty array
         n,m corresponds to the width,height of the created image
         wavelength is the illumination wavelength in nm"""
