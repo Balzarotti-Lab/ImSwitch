@@ -79,13 +79,9 @@ class SLM_PCIeManager(SignalInterface):
 
         # tilt and aberration masks
         # self.initCorrectionMask()
-        self.__logger.debug("Init tilt mask")
         self.initTiltMask()
-        self.__logger.debug("Init aberration mask")
         self.initAberrationMask()
-        self.__logger.debug("Init scan mask")
         self.initScanMask()
-        self.__logger.debug("Masks in the __init__ method initialized")
 
         self.__masksAber = [self.__maskAberLeft, self.__maskAberRight]
         self.__masksTilt = [self.__maskTiltLeft, self.__maskTiltRight]
@@ -463,7 +459,6 @@ class Mask:
         n,m corresponds to the width,height of the created image
         wavelength is the illumination wavelength in nm"""
         self.__logger = initLogger(self, tryInheritParent=True)
-        self.__logger.debug(f"Init mask with bit_depth: {bit_depth}")
         self.zeroimg = np.zeros((height, width), dtype=np.uint8)
         self.img = np.zeros((height, width), dtype=np.uint8)
         self.height = height
@@ -538,21 +533,7 @@ class Mask:
     def pi2uint8(self):
         """Method converting a phase image (values from 0 to 2Pi) into a uint8
         image"""
-        # print debug log with max, min value, shape and type of the image
-        self.__logger.debug(f"Max value: {np.max(self.img)}")
-        self.__logger.debug(f"Min value: {np.min(self.img)}")
-        self.__logger.debug(f"Shape: {self.img.shape}")
-        self.__logger.debug(f"Type: {self.img.dtype}")
-        self.__logger.debug(f"self.value_max: {self.value_max}")
-        self.__logger.debug(f"Multiplied by {self.value_max / (2 * math.pi)}")
-        self.__logger.debug("--------------------")
         self.img *= self.value_max / (2 * math.pi)
-        # print debug log with max, min value, shape and type of the image
-        self.__logger.debug(f"Max value: {np.max(self.img)}")
-        self.__logger.debug(f"Min value: {np.min(self.img)}")
-        self.__logger.debug(f"Shape: {self.img.shape}")
-        self.__logger.debug(f"Type: {self.img.dtype}")
-        self.__logger.debug("===================================")
         self.img = np.round(self.img).astype(np.uint8)
 
     def load(self, img):
@@ -792,7 +773,6 @@ class Mask:
         return "image of the mask"
 
     def __add__(self, other):
-        self.__logger.debug(f"Adding two masks togeather")
         if self.height == other.height and self.width == other.width:
             out = Mask(self.height, self.width, self.bit_depth, self.wavelength)
             out.load(((self.image() + other.image()) % (self.value_max + 1)).astype(np.uint8))
