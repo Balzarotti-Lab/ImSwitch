@@ -31,7 +31,7 @@ class SuperScanManager(ABC):
             self._TTLCycleDesigner = None
 
         self._expectedSyncParameters = []
-   
+
     def isValidChild(self):  # For future possible implementation
         return True
 
@@ -74,6 +74,8 @@ class SuperScanManager(ABC):
         self._checkScanDefined()
         parameterDict = copy.deepcopy(self._setupInfo.scan.TTLCycleDesignerParams)
         parameterDict.update(TTLParameters)
+        # with debug logger print the parameterDict
+        self._logger.debug(f'TTL parameters: {parameterDict}')
         return self._TTLCycleDesigner.make_signal(parameterDict, self._setupInfo, scanInfoDict)
 
     def _checkScanDefined(self):
