@@ -128,6 +128,11 @@ class IC_Camera:
     #def get_property_type(self, property_name):
     #    return IC_Property(self._handle, property_name).type
 
+    def get_trigger_modes(self):
+        """
+        """
+        return IC_GrabberDLL.get_trigger_modes(self._handle)
+
     def reset_properties(self):
         """
         Resets all properties to their default values. If a property has
