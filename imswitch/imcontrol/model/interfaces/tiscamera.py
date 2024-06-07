@@ -45,7 +45,7 @@ class CameraTIS:
         # self.cam.wait_til_frame_ready(20)  # wait for frame ready
         frame, width, height, depth = self.cam.get_image_data()
         # print to the logger the shape
-        self.__logger.debug(f'Width x height x depth: {width}x{height}x{depth}')
+        # self.__logger.debug(f'Width x height x depth: {width}x{height}x{depth}')
         # self.__logger.debug(f'Frame shape: {frame.shape}')
         frame = np.array(frame, dtype='float64')
         # Check if below is giving the right dimensions out
@@ -53,7 +53,7 @@ class CameraTIS:
         #       3D array and taking the first plane of that
         frame = np.reshape(frame, (height, width, depth))[:, :, 0]
         # print shape after reshaping
-        self.__logger.debug(f'Frame shape after reshaping: {frame.shape}')
+        # self.__logger.debug(f'Frame shape after reshaping: {frame.shape}')
         # frame = np.transpose(frame)
         # print shape after transposing
         # self.__logger.debug(f'Frame shape after transposing: {frame.shape}')
