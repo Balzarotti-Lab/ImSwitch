@@ -84,10 +84,13 @@ class ScanControllerBase(SuperScanController):
                     self._master.positionersManager[positionerName].setPosition(position, 0)
                     self._logger.debug(f'set {positionerName} center to {position} before scan')
 
-            # emit signal to start SLM scan
-            self._commChannel.sigGetReadyForSLMScan.emit()
-            # # run scan
-            # self._master.nidaqManager.runScan(self.signalDict, self.scanInfoDict)
+            # if slm scan is toggled
+            if self._widget.toggleSLMscan.isChecked():
+                # emit signal to start SLM scan
+                self._commChannel.sigGetReadyForSLMScan.emit()
+            else:
+                # run scan
+                self._master.nidaqManager.runScan(self.signalDict, self.scanInfoDict)
         except Exception:
             self._logger.error(traceback.format_exc())
             self.isRunning = False

@@ -187,6 +187,10 @@ class ScanWidgetBase(SuperScanWidget):
         currentRow += 1
 
         self.grid.addWidget(QtWidgets.QLabel('Scan mode:'), currentRow, 0)
+
+        self.toggleSLMscan = QtWidgets.QCheckBox('Scan with SLM')
+        self.grid.addWidget(self.toggleSLMscan, currentRow, 1)
+
         self.grid.addWidget(self.scanRegimeSLM, currentRow, 2)
         self.grid.addWidget(self.scanRegimeEOD, currentRow, 3)
         currentRow += 1
