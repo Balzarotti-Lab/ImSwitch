@@ -24,6 +24,8 @@ class BetaTTLCycleDesigner(TTLCycleDesigner):
 
     def make_signal(self, parameterDict, setupInfo, scanInfoDict=None):
 
+        self._logger.debug(f'Generating TTL signals with parameters: {parameterDict}')
+
         if not self.parameterCompatibility(parameterDict):
             self._logger.error('TTL parameters seem incompatible, this error should not be since'
                                ' this should be checked at program start-up')
@@ -32,7 +34,7 @@ class BetaTTLCycleDesigner(TTLCycleDesigner):
         sampleRate = setupInfo.scan.sampleRate
         targets = parameterDict['target_device']
         cycleSamples = parameterDict['sequence_time'] * sampleRate
-        # self._logger.debug(f'DO sample rate: {sampleRate}, cycleSamples: {cycleSamples}')
+        self._logger.debug(f'DO sample rate: {sampleRate}, cycleSamples: {cycleSamples}')
         if not cycleSamples.is_integer():
             self._logger.warning('Non-integer number of sequence samples, rounding up')
         cycleSamples = int(np.ceil(cycleSamples))

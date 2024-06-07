@@ -75,7 +75,7 @@ class SuperScanManager(ABC):
         parameterDict = copy.deepcopy(self._setupInfo.scan.TTLCycleDesignerParams)
         parameterDict.update(TTLParameters)
         # with debug logger print the parameterDict
-        self._logger.debug(f'TTL parameters: {parameterDict}')
+        # self._logger.debug(f'TTL parameters: {parameterDict}')
         return self._TTLCycleDesigner.make_signal(parameterDict, self._setupInfo, scanInfoDict)
 
     def _checkScanDefined(self):
