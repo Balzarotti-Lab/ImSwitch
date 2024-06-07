@@ -150,7 +150,7 @@ class NidaqManager(SignalInterface):
                                           samps_per_chan=sampsInScan)
         if starttrig:
             aitask.triggers.start_trigger.cfg_dig_edge_start_trig(reference_trigger)
-        
+
         #self.__logger.debug(f'Created AI task: {name}')
         return aitask
 
@@ -261,7 +261,7 @@ class NidaqManager(SignalInterface):
                 AOchannels = []
 
                 for device, channel in AOTargetChanPairs:
-                    #self.__logger.debug(f'Device {device}, channel {channel} is part of scan')
+                    self.__logger.debug(f'Device {device}, channel {channel} is part of scan')
                     if device not in stageDic:
                         continue
                     AOdevices.append(device)
@@ -279,7 +279,7 @@ class NidaqManager(SignalInterface):
                     DOdevices.append(device)
                     DOsignals.append(ttlDic[device])
                     DOlines.append(line)
-                
+
                 # check if line and frame clock should be outputted, if so add to DO lists
                 if self.__setupInfo.scan.lineClockLine:
                     DOdevices.append('LineClock')
@@ -302,7 +302,7 @@ class NidaqManager(SignalInterface):
                     detSampsInScan = int(
                         len(AOsignals[0] if len(AOsignals) > 0 else DOsignals[0]) * (1e6/100e3)
                     )
-                    #self.__logger.debug(f'Total detection samples in scan: {detSampsInScan}')
+                    self.__logger.debug(f'Total detection samples in scan: {detSampsInScan}')
                     self.timerTask = self.__createChanCOTask(
                         'TimerTask', channel=self.__timerCounterChannel, rate=1e6,
                         sampsInScan=detSampsInScan, starttrig=self.__startTrigger,
