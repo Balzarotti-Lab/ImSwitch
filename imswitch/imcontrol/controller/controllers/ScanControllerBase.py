@@ -90,6 +90,9 @@ class ScanControllerBase(SuperScanController):
                 self._commChannel.sigGetReadyForSLMScan.emit()
             else:
                 # run scan
+                # in debug log show the length of the signal stored in signalDict
+                # key = list(self.signalDict.keys())[0]
+                # self._logger.debug(f'Length of signalDict: {self.signalDict}')
                 self._master.nidaqManager.runScan(self.signalDict, self.scanInfoDict)
         except Exception:
             self._logger.error(traceback.format_exc())

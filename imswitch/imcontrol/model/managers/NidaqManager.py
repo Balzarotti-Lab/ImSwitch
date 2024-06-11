@@ -255,6 +255,10 @@ class NidaqManager(SignalInterface):
                 stageDic = signalDic['scanSignalsDict']
                 ttlDic = signalDic['TTLCycleSignalsDict']
 
+                # show the length of the TTL signals
+                for key, value in ttlDic.items():
+                    self.__logger.debug(f'TTL signal {key} has length {len(value)}')
+
                 AOTargetChanPairs = self.__makeSortedTargets('getAnalogChannel')
                 AOdevices = []
                 AOsignals = []
@@ -269,6 +273,7 @@ class NidaqManager(SignalInterface):
                     AOchannels.append(channel)
 
                 DOTargetChanPairs = self.__makeSortedTargets('getDigitalLine')
+                # dictionaries with TTL signals and devices
                 DOdevices = []
                 DOsignals = []
                 DOlines = []

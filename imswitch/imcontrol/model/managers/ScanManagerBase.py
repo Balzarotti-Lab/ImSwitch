@@ -113,9 +113,11 @@ class ScanManagerBase(SuperScanManager):
             TTLCycleSignalsDict = self.getTTLCycleSignalsDict(TTLParameters, scanInfoDict)
         else:
             TTLCycleSignalsDict = self.getTTLCycleSignalsDict(TTLParameters)
+            # with debug logger print the length of the TTL signals
             scanSignalsDict = {}
             scanInfoDict = {}
 
+        self._logger.debug(f'TTL signals length: {len(TTLCycleSignalsDict)}')
         return (
             {'scanSignalsDict': scanSignalsDict,
              'TTLCycleSignalsDict': TTLCycleSignalsDict},

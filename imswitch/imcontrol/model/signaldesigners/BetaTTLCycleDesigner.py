@@ -26,6 +26,8 @@ class BetaTTLCycleDesigner(TTLCycleDesigner):
 
         self._logger.debug(f'Generating TTL signals with parameters: {parameterDict}')
 
+        self._logger.debug(f'scanInfoDict: {scanInfoDict}')
+
         if not self.parameterCompatibility(parameterDict):
             self._logger.error('TTL parameters seem incompatible, this error should not be since'
                                ' this should be checked at program start-up')
@@ -49,6 +51,10 @@ class BetaTTLCycleDesigner(TTLCycleDesigner):
 
             signalDict[target] = np.copy(tmpSigArr)
 
+                # with the debug logger print the length of the signals in the signalDict
+        for target, signal in signalDict.items():
+            self._logger.debug(f'Target: {target}, signal length: {len(signal)}')
+
         if scanInfoDict is not None:
             positions = scanInfoDict['positions']
             returnTime = scanInfoDict['return_time']
@@ -66,6 +72,10 @@ class BetaTTLCycleDesigner(TTLCycleDesigner):
                 signal = np.tile(signal, positions[1] * positions[2])
 
                 signalDict[target] = signal
+
+        # with the debug logger print the length of the signals in the signalDict
+        for target, signal in signalDict.items():
+            self._logger.debug(f'Target: {target}, signal length: {len(signal)}')
 
         return signalDict
 
