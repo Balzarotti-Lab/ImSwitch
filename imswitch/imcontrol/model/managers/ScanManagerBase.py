@@ -75,7 +75,7 @@ class SuperScanManager(ABC):
         parameterDict = copy.deepcopy(self._setupInfo.scan.TTLCycleDesignerParams)
         parameterDict.update(TTLParameters)
         # with debug logger print the parameterDict
-        # self._logger.debug(f'TTL parameters: {parameterDict}')
+        self._logger.debug(f'TTL parameters dict: {parameterDict}')
         return self._TTLCycleDesigner.make_signal(parameterDict, self._setupInfo, scanInfoDict)
 
     def _checkScanDefined(self):
@@ -100,7 +100,13 @@ class ScanManagerBase(SuperScanManager):
         self._checkScanDefined()
 
         if not staticPositioner:
+            # scan params dict
+            self._logger.debug(f'Scan parameters: {scanParameters}')
             scanSignalsDict, positions, scanInfoDict = self.getScanSignalsDict(scanParameters)
+            # using the debug logger print the scanSignalsDict
+            self._logger.debug(f'Scan signals dict: {scanSignalsDict}')
+            # using the debug logger print the scanParameters
+            self._logger.debug(f'Scan parameters: {scanParameters}')
             if not self._scanDesigner.checkSignalComp(
                     scanParameters, self._setupInfo, scanInfoDict
             ):
