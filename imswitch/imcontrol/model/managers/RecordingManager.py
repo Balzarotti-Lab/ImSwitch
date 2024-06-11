@@ -95,10 +95,10 @@ class HDF5Storer(Storer):
                     dataset[:, ...] = np.moveaxis(image, [0, 1, 2, 3], [3, 2, 1, 0])
                 else:
                     dataset[:, ...] = np.moveaxis(image, 0, -1)
-            
+
                 file.close()
                 logger.info(f"Saved image to hdf5 file {path}")
-        
+
 
 class TiffStorer(Storer):
     """ A storer that stores the images in a series of tiff files """
@@ -614,6 +614,8 @@ class RecordingWorker(Worker):
     def _getNewFrames(self, detectorName):
         newFrames = self.__recordingManager.detectorsManager[detectorName].getChunk()
         newFrames = np.array(newFrames)
+        # send debug loggers
+        self.__logger.debug(f"New frames for {detectorName} are {newFrames.shape}")
         return newFrames
 
 
