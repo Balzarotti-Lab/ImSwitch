@@ -52,6 +52,10 @@ class CommunicationChannel(SignalInterface):
 
     sigRunScan = Signal(bool, bool)  # (recalculateSignals, isNonFinalPartOfSequence)
 
+    sigPrepareScan = Signal(bool, bool) # (recalculateSignals, isNonFinalPartOfSequence)
+
+    sigScanPreparedLetsRecord = Signal()
+
     sigAbortScan = Signal()
 
     sigScanStarting = Signal()

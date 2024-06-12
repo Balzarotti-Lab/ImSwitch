@@ -50,6 +50,7 @@ class RecordingController(ImConWidgetController):
         self._commChannel.sigSnapImgPrev.connect(self.snapImagePrev)
         self._commChannel.sigStartRecordingExternal.connect(self.startRecording)
         self._commChannel.sigRequestScanFreq.connect(self.sendScanFreq)
+        self._commChannel.sigScanPreparedLetsRecord.connect(self.startRecordingExternal)
 
         # Connect RecordingWidget signals
         self._widget.sigDetectorModeChanged.connect(self.detectorChanged)
@@ -95,13 +96,13 @@ class RecordingController(ImConWidgetController):
 
         attrs = {detectorName: self._commChannel.sharedAttrs.getHDF5Attributes()
                  for detectorName in detectorNames}
-        
+
         self._master.recordingManager.snap(detectorNames,
                                            savename,
                                            SaveMode(self._widget.getSnapSaveMode()),
                                            SaveFormat(self._widget.getsaveFormat()),
                                            attrs)
-        
+
     def snapNumpy(self):
         self.updateRecAttrs(isSnapping=True)
         detectorNames = self.getDetectorNamesToCapture()
@@ -174,10 +175,12 @@ class RecordingController(ImConWidgetController):
                 self.recordingArgs['recTime'] = self._widget.getTimeToRec()
                 self._master.recordingManager.startRecording(**self.recordingArgs)
             elif self.recMode == RecMode.ScanOnce:
+                self.__logger.info('Starting recording of single scan')
                 self.recordingArgs['recFrames'] = self._commChannel.getNumScanPositions()
-                self._master.recordingManager.startRecording(**self.recordingArgs)
-                time.sleep(0.3)
+                # time.sleep(0.3)
+                # self._commChannel.sigPrepareScan.emit(True, False)
                 self._commChannel.sigRunScan.emit(True, False)
+                # self._master.recordingManager.startRecording(**self.recordingArgs)
             elif self.recMode == RecMode.ScanLapse:
                 self.recordingArgs['singleLapseFile'] = self._widget.getTimelapseSingleFile()
                 self.lapseTotal = self._widget.getTimelapseTime()
@@ -192,6 +195,10 @@ class RecordingController(ImConWidgetController):
             if self.recMode == RecMode.ScanLapse and self.lapseCurrent != -1:
                 self._commChannel.sigAbortScan.emit()
             self._master.recordingManager.endRecording()
+
+    def startRecordingExternal(self):
+        self.__logger.debug('Recieved external signal to start recording')
+        self._master.recordingManager.startRecording(**self.recordingArgs)
 
     def nextLapse(self):
         self.endedRecording = False
