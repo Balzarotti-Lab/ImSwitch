@@ -377,6 +377,7 @@ class NidaqManager(SignalInterface):
                 if len(AOsignals) > 0:
                     self.tasks['ao'].start()
                     self.aoTaskWaiter.start()
+                self.__logger.debug('Starting Nidaq scan!')
                 self.sigScanStarted.emit()
                 self.__logger.info('Nidaq scan started!')
 
