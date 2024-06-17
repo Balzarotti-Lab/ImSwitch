@@ -20,7 +20,7 @@ class TISManager(DetectorManager):
         self.__logger = initLogger(self, instanceName=name)
 
         self._camera = self._getTISObj(detectorInfo.managerProperties['cameraListIndex'])
-        
+
         self._running = False
         self._adjustingParameters = False
 
@@ -64,7 +64,7 @@ class TISManager(DetectorManager):
         """Sets a parameter value and returns the value.
         If the parameter doesn't exist, i.e. the parameters field doesn't
         contain a key with the specified parameter name, an error will be
-        raised."""        
+        raised."""
 
         super().setParameter(name, value)
 
@@ -90,7 +90,9 @@ class TISManager(DetectorManager):
         super().setBinning(binning)
 
     def getChunk(self):
-        return self._camera.grabFrame()[np.newaxis, :, :]
+        chunk = self._camera.grabFrame()[np.newaxis, :, :]
+        self.__logger.debug(f'Getting new chunk with shape {chunk.shape}')
+        return chunk
 
     def flushBuffers(self):
         pass
@@ -150,7 +152,7 @@ class TISManager(DetectorManager):
 
         self.__logger.info(f'Initialized camera, model: {camera.model}')
         return camera
-    
+
     def close(self):
         self.__logger.info(f'Shutting down camera, model: {self._camera.model}')
         pass
