@@ -33,6 +33,10 @@ class IC4Camera:
     def get_property(self, property_name):
         return self.grabber.device_property_map.find(property_name).value
 
+    def set_property(self, property_name, value):
+        self.grabber.device_property_map.find(property_name).value = value
+
     def openPropertiesGUI(self):
         # ic4.Dialogs.grabber_device_properties(self.grabber)
         pass
+

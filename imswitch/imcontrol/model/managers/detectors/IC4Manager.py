@@ -1,6 +1,8 @@
+from typing import Dict
 import numpy as np
 
 from imswitch.imcommon.model import initLogger
+from imswitch.imcontrol.model.managers.detectors.DetectorManager import DetectorParameter
 from .DetectorManager import DetectorManager, DetectorAction, DetectorNumberParameter
 
 class IC4Manager(DetectorManager):
@@ -29,7 +31,7 @@ class IC4Manager(DetectorManager):
 
         # Prepare parameters
         parameters = {
-            'exposure': DetectorNumberParameter(group='Misc', value=100, valueUnits='ms',
+            'ExposureTime': DetectorNumberParameter(group='Misc', value=100, valueUnits='ms',
                                                 editable=True),
             'gain': DetectorNumberParameter(group='Misc', value=1, valueUnits='arb.u.',
                                             editable=True),
@@ -46,6 +48,21 @@ class IC4Manager(DetectorManager):
 
         super().__init__(detectorInfo, name, fullShape=fullShape, supportedBinnings=[1],
                     model=self._camera.model, parameters=parameters, actions=actions, croppable=True)
+
+        # test to set exposure to 99 ms
+        # self.setParameter('ExposureTime', 99)
+
+    def setParameter(self, name: str, value):
+        """ Set a parameter of the detector and returns the new value. """
+        self.__logger.debug(f"IC4Manager.setParameter: {name} = {value}")
+
+        super().setParameter(name, value)
+
+        if name not in self._DetectorManager__parameters:
+            raise AttributeError(f'Non-existent parameter "{name}" specified')
+
+        value = self._camera.set_property(name, value)
+        return value
 
     def pixelSizeUm(self):
         """ The pixel size in micrometers, in 3D, in the format
