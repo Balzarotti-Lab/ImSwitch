@@ -35,6 +35,7 @@ class IC4Manager(DetectorManager):
                                             editable=True),
             'brightness': DetectorNumberParameter(group='Misc', value=1, valueUnits='arb.u.',
                                                   editable=True),
+            'frame_rate': DetectorNumberParameter(group='Misc', value=10, valueUnits='fps', editable=True),
         }
 
                 # Prepare actions
