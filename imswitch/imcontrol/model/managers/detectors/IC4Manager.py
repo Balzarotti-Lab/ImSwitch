@@ -101,7 +101,7 @@ class IC4Manager(DetectorManager):
 
     def finalize(self) -> None:
         """ Close/cleanup detector. """
-        pass
+        self._camera.finalize()
 
     def getIC4obj(self, serialNo):
         """ Get the IC4 object. """
