@@ -118,6 +118,8 @@ class DetectorManager(SignalInterface):
         except Exception:
             self.__logger.error(traceback.format_exc())
         else:
+            # self.__logger.debug('New frame received')
+            # self.__logger.debug(f'Frame shape: {self.__image.shape}, init: {init}, scale: {self.scale}')
             self.sigImageUpdated.emit(self.__image, init, self.scale)
 
     def setParameter(self, name: str, value: Any) -> Dict[str, DetectorParameter]:
