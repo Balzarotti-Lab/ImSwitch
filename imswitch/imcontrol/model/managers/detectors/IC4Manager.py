@@ -3,7 +3,7 @@ import numpy as np
 
 from imswitch.imcommon.model import initLogger
 from imswitch.imcontrol.model.managers.detectors.DetectorManager import DetectorParameter
-from .DetectorManager import DetectorManager, DetectorAction, DetectorNumberParameter
+from .DetectorManager import DetectorManager, DetectorAction, DetectorNumberParameter, DetectorListParameter
 
 
 class IC4Manager(DetectorManager):
@@ -36,11 +36,11 @@ class IC4Manager(DetectorManager):
         parameters = {
             'ExposureTime': DetectorNumberParameter(group='Misc', value=100, valueUnits='ms',
                                                     editable=True),
-            'gain': DetectorNumberParameter(group='Misc', value=1, valueUnits='arb.u.',
+            'Gain': DetectorNumberParameter(group='Misc', value=1, valueUnits='arb.u.',
                                             editable=True),
-            'brightness': DetectorNumberParameter(group='Misc', value=1, valueUnits='arb.u.',
-                                                  editable=True),
             'AcquisitionFrameRate': DetectorNumberParameter(group='Misc', value=10, valueUnits='fps', editable=True),
+            'TriggerMode': DetectorListParameter(group='Misc', value="Off", options=["On", "Off"], editable=True),
+            'TriggerSelector': DetectorListParameter(group='Misc', value='ExposureActive', options=['FrameStart', 'ExposureActive'], editable=True), # 0 for FrameStart, 1 for ExposureActive
         }
 
         # get the pixel size

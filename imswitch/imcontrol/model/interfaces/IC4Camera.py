@@ -17,6 +17,7 @@ class QueueListener(ic4.QueueSinkListener):
 
         if camera is not None:
             self.camera = camera
+            self.__logger.debug(f"Camera: {self.camera}")
 
     def sink_connected(self, sink: ic4.QueueSink, image_type: ic4.ImageType, min_buffers_required: int) -> bool:
         self.__logger.debug("calling sink connected")
@@ -43,7 +44,7 @@ class QueueListener(ic4.QueueSinkListener):
     def sink_disconnected(self, sink: ic4.QueueSink):
         # while there are frames in the queue, pop them
         self.__logger.debug(
-            f"There are still {sink.queue_sizes().output_queue_length} frames in the queue!")
+            f"There are still {sink.queue_sizes().output_queue_length} frames in the queue.")
         while sink.queue_sizes().output_queue_length > 0:
             sink.pop_output_buffer()
         self.__logger.debug("==Sink disconnected")
@@ -55,6 +56,9 @@ class IC4Camera:
         self.__logger.debug("IC4camera.__init__")
 
         self._get_grabber(serial_number)
+
+        # set camera to defalut
+        self.grabber.device_property_map.set_value(ic4.PropId.USER_SET_SELECTOR, "Default")
 
         # Configure the device to output images in the Mono16 pixel format
         self.grabber.device_property_map.set_value(ic4.PropId.PIXEL_FORMAT, ic4.PixelFormat.Mono16)
@@ -85,7 +89,13 @@ class IC4Camera:
         return self.grabber.device_property_map.find(property_name).value
 
     def set_property(self, property_name, value):
-        self.grabber.device_property_map.find(property_name).value = value
+        if property_name != "TriggerSelector":
+            self.grabber.device_property_map.find(property_name).value = value
+        elif property_name == "TriggerSelector":
+            if value == "FrameStart":
+                self.grabber.device_property_map.find(ic4.PropId.TRIGGER_SELECTOR).int_value = 0
+            else:
+                self.grabber.device_property_map.find(ic4.PropId.TRIGGER_SELECTOR).int_value = 1
 
     def openPropertiesGUI(self):
         # ic4.Dialogs.grabber_device_properties(self.grabber)
