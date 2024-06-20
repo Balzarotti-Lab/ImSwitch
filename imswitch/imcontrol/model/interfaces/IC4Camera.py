@@ -2,6 +2,8 @@ import numpy as np
 
 import imagingcontrol4 as ic4
 from imswitch.imcommon.model import initLogger
+import sys
+from PyQt5.QtWidgets import QApplication, QDialog, QLabel
 
 ic4.Library.init()
 
@@ -98,8 +100,33 @@ class IC4Camera:
                 self.grabber.device_property_map.find(ic4.PropId.TRIGGER_SELECTOR).int_value = 1
 
     def openPropertiesGUI(self):
-        # ic4.Dialogs.grabber_device_properties(self.grabber)
-        pass
+        class PropertiesDialog(QDialog):
+            def __init__(self, parent=None):
+                super(PropertiesDialog, self).__init__(parent)
+                self.setWindowTitle("Camera Properties")
+                self.setGeometry(100, 100, 400, 300)
+
+                label = QLabel("Camera properties go here", self)
+                label.move(20, 20)
+
+                # # Get the window handle
+                # window_handle = self.winId()
+
+                # # Pass the window handle to the ic4 method
+                # self.grabber.device_property_map.set_value(ic4.PropId.WINDOW_HANDLE, window_handle)
+        def __init__(self, parent=None):
+            super(PropertiesDialog, self).__init__(parent)
+            self.setWindowTitle("Camera Properties")
+            self.setGeometry(100, 100, 400, 300)
+
+            label = QLabel("Camera properties go here", self)
+            label.move(20, 20)
+        app = QApplication(sys.argv)
+        dialog = PropertiesDialog()
+        ic4.Dialogs.grabber_device_properties(self.grabber, dialog.winId())
+        # dialog.exec_()
+
+        # sys.exit(app.exec_())
 
     def finalize(self):
         # check whether cam is streaming
