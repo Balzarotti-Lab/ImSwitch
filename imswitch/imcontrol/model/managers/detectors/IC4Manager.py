@@ -40,7 +40,8 @@ class IC4Manager(DetectorManager):
                                             editable=True),
             'AcquisitionFrameRate': DetectorNumberParameter(group='Misc', value=10, valueUnits='fps', editable=True),
             'TriggerMode': DetectorListParameter(group='Misc', value="Off", options=["On", "Off"], editable=True),
-            'TriggerSelector': DetectorListParameter(group='Misc', value='ExposureActive', options=['FrameStart', 'ExposureActive'], editable=True), # 0 for FrameStart, 1 for ExposureActive
+            # 0 for FrameStart, 1 for ExposureActive
+            'TriggerSelector': DetectorListParameter(group='Misc', value='ExposureActive', options=['FrameStart', 'ExposureActive'], editable=True),
         }
 
         # get the pixel size
@@ -49,8 +50,8 @@ class IC4Manager(DetectorManager):
 
         # Prepare actions
         actions = {
-            'More properties': DetectorAction(group='Misc',
-                                              func=self._camera.openPropertiesGUI)
+            'More properties (crashing!)': DetectorAction(group='Misc',
+                                                          func=self._camera.openPropertiesGUI)
         }
 
         super().__init__(detectorInfo, name, fullShape=fullShape, supportedBinnings=[1],
