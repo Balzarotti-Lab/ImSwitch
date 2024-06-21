@@ -60,7 +60,7 @@ class IC4Camera:
     def setup_continuous_acquisition(self, max_queue_size=5):
         self.__logger.debug("Setting up the stream!")
         prop_map = self.grabber.device_property_map
-        self.queue_listener = QueueListener(prop_map)
+        self.queue_listener = self.QueueListener(prop_map)
         self.sink = ic4.QueueSink(self.queue_listener, max_output_buffers=4)
         self.__logger.debug(f"Sink: {self.sink}")
         self.grabber.stream_setup(self.sink, setup_option=ic4.StreamSetupOption.ACQUISITION_START)
@@ -80,34 +80,33 @@ class IC4Camera:
     def get_property(self, property_name):
         return self.grabber.device_property_map.find(property_name).value
 
+    class QueueListener(ic4.QueueSinkListener):
+        prop_map: ic4.PropertyMap
 
-class QueueListener(ic4.QueueSinkListener):
-    prop_map: ic4.PropertyMap
+        def __init__(self, prop_map: ic4.PropertyMap):
+            self.prop_map = prop_map
 
-    def __init__(self, prop_map: ic4.PropertyMap):
-        self.prop_map = prop_map
+            self.__logger = initLogger(self, tryInheritParent=True)
 
-        self.__logger = initLogger(self, tryInheritParent=True)
+            self.__logger.debug("QueueListener.__init__")
 
-        self.__logger.debug("QueueListener.__init__")
+        def sink_connected(self, sink: ic4.QueueSink, image_type: ic4.ImageType, min_buffers_required: int) -> bool:
+            return True
 
-    def sink_connected(self, sink: ic4.QueueSink, image_type: ic4.ImageType, min_buffers_required: int) -> bool:
-        return True
+        def frames_queued(self, sink: ic4.QueueSink):
+            self.__logger.debug("there are frames in the queue!")
+            try:
+                buffer = sink.pop_output_buffer()
+                image = buffer.numpy_wrap()
 
-    def frames_queued(self, sink: ic4.QueueSink):
-        self.__logger.debug("there are frames in the queue!")
-        try:
-            buffer = sink.pop_output_buffer()
-            image = buffer.numpy_wrap()
+            except ic4.IC4Exception as ex:
+                self.__logger.error(f"Error trying to request ChunkExposuretime: {ex.code} ({ex.message})")
 
-        except ic4.IC4Exception as ex:
-            self.__logger.error(f"Error trying to request ChunkExposuretime: {ex.code} ({ex.message})")
-
-        finally:
-            # Disconnecting is not strictly necessary, but will release the buffer for reuse earlier
-            self.prop_map.connect_chunkdata(None)
+            finally:
+                # Disconnecting is not strictly necessary, but will release the buffer for reuse earlier
+                self.prop_map.connect_chunkdata(None)
 
 
-    def sink_disconnected(self, sink: ic4.QueueSink):
-        self.__logger.debug("Sink disconnected")
-        pass
+        def sink_disconnected(self, sink: ic4.QueueSink):
+            self.__logger.debug("Sink disconnected")
+            pass
