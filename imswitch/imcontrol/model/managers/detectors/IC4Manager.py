@@ -20,6 +20,29 @@ class IC4Manager(DetectorManager):
 
         self._camera = self.getIC4obj(detectorInfo.managerProperties['IC4']['serial_no'])
 
+        fullShape = (self._camera.get_property('Width'),
+                     self._camera.get_property('Height'))
+
+        self.__logger.debug(f"fullShape: {fullShape}")
+
+        self.crop(hpos=0, vpos=0, hsize=fullShape[0], vsize=fullShape[1])
+
+        # Prepare parameters
+        parameters = {
+            'exposure': DetectorNumberParameter(group='Misc', value=100, valueUnits='ms',
+                                                editable=True),
+            'gain': DetectorNumberParameter(group='Misc', value=1, valueUnits='arb.u.',
+                                            editable=True),
+            'brightness': DetectorNumberParameter(group='Misc', value=1, valueUnits='arb.u.',
+                                                  editable=True),
+        }
+
+                # Prepare actions
+        actions = {
+            'More properties': DetectorAction(group='Misc',
+                                              func=self._camera.openPropertiesGUI)
+        }
+
         super().__init__(detectorInfo, name, fullShape=fullShape, supportedBinnings=[1],
                     model=self._camera.model, parameters=parameters, actions=actions, croppable=True)
 
