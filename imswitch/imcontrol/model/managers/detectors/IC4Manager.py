@@ -5,6 +5,7 @@ from imswitch.imcommon.model import initLogger
 from imswitch.imcontrol.model.managers.detectors.DetectorManager import DetectorParameter
 from .DetectorManager import DetectorManager, DetectorAction, DetectorNumberParameter
 
+
 class IC4Manager(DetectorManager):
     """ DetectorManager that deals with TheImagingSource cameras and uses the IC4 backend.
     https://www.theimagingsource.com/en-us/documentation/ic4python/index.html
@@ -34,7 +35,7 @@ class IC4Manager(DetectorManager):
         # Prepare parameters
         parameters = {
             'ExposureTime': DetectorNumberParameter(group='Misc', value=100, valueUnits='ms',
-                                                editable=True),
+                                                    editable=True),
             'gain': DetectorNumberParameter(group='Misc', value=1, valueUnits='arb.u.',
                                             editable=True),
             'brightness': DetectorNumberParameter(group='Misc', value=1, valueUnits='arb.u.',
@@ -43,16 +44,17 @@ class IC4Manager(DetectorManager):
         }
 
         # get the pixel size
-        pixel_size = DetectorNumberParameter(group='Misc', value=6.5, valueUnits='um', editable=True)
+        pixel_size = DetectorNumberParameter(
+            group='Misc', value=6.5, valueUnits='um', editable=True)
 
-                # Prepare actions
+        # Prepare actions
         actions = {
             'More properties': DetectorAction(group='Misc',
                                               func=self._camera.openPropertiesGUI)
         }
 
         super().__init__(detectorInfo, name, fullShape=fullShape, supportedBinnings=[1],
-                    model=self._camera.model, parameters=parameters, actions=actions, croppable=True)
+                         model=self._camera.model, parameters=parameters, actions=actions, croppable=True)
 
         # test to set exposure to 99 ms
         # self.setParameter('ExposureTime', 99)
@@ -94,8 +96,7 @@ class IC4Manager(DetectorManager):
 
     @property
     def scale(self):
-        return [1,1]
-
+        return [1, 1]
 
     def crop(self, hpos: int, vpos: int, hsize: int, vsize: int) -> None:
         """ Crop the frame read out by the detector. """
