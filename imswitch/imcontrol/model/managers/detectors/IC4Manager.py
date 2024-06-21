@@ -55,10 +55,10 @@ class IC4Manager(DetectorManager):
                     model=self._camera.model, parameters=parameters, actions=actions, croppable=True)
 
         # test to set exposure to 99 ms
-        self.setParameter('ExposureTime', 99)
+        # self.setParameter('ExposureTime', 99)
 
         # set framerate to 10 fps
-        self.setParameter('AcquisitionFrameRate', 10.0)
+        # self.setParameter('AcquisitionFrameRate', 10.0)
 
         # get the exposure time and AcquisitionFrameRate
         self.__logger.debug(f"ExposureTime: {self.getParameter('ExposureTime')}")
@@ -107,7 +107,7 @@ class IC4Manager(DetectorManager):
         (height, width). """
         self.__logger.debug(f"IC4Manager.getLatestFrame with {self._camera.latest_frame.shape}")
         if self._running:
-            return self._camera.latest_frame
+            return self._camera.get_latest_frame()
 
     def getChunk(self) -> np.ndarray:
         """ Returns the frames captured by the detector since getChunk was last
@@ -133,6 +133,8 @@ class IC4Manager(DetectorManager):
 
     def stopAcquisition(self) -> None:
         """ Stops image acquisition. """
+
+        self.__logger.debug("Stopping acquisition")
         if self._running:
             self._running = False
             self._camera.stop_acquisition()
