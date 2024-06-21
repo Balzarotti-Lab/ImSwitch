@@ -1,7 +1,7 @@
 import traceback
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -52,10 +52,10 @@ class DetectorNumberParameter(DetectorParameter):
 class DetectorListParameter(DetectorParameter):
     """ A detector parameter with a value from a list of options. """
 
-    value: str
+    value: Union[str, bool, int]
     """ The value of the parameter. """
 
-    options: List[str]
+    options: List[Union[str, bool, int]]
     """ The available values to pick from. """
 
 
