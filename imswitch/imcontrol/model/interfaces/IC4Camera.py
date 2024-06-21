@@ -29,3 +29,6 @@ class IC4Camera:
                 model = device_info.model_name
                 grabber.device_open(device_info)
                 return grabber, model
+
+    def get_property(self, property_name):
+        return self.grabber.device_property_map.find(property_name).value
