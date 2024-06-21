@@ -40,3 +40,10 @@ class IC4Camera:
         # ic4.Dialogs.grabber_device_properties(self.grabber)
         pass
 
+    def finalize(self):
+        # check whether cam is streaming
+        if self.grabber.is_streaming():
+            self.grabber.stream_stop()
+        self.grabber.device_close()
+        ic4.Library.exit()
+
