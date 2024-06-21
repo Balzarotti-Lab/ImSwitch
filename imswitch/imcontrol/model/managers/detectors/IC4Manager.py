@@ -56,12 +56,6 @@ class IC4Manager(DetectorManager):
         super().__init__(detectorInfo, name, fullShape=fullShape, supportedBinnings=[1],
                          model=self._camera.model, parameters=parameters, actions=actions, croppable=True)
 
-        # test to set exposure to 99 ms
-        # self.setParameter('ExposureTime', 99)
-
-        # set framerate to 10 fps
-        # self.setParameter('AcquisitionFrameRate', 10.0)
-
         # get the exposure time and AcquisitionFrameRate
         self.__logger.debug(f"ExposureTime: {self.getParameter('ExposureTime')}")
         self.__logger.debug(f"AcquisitionFrameRate: {self.getParameter('AcquisitionFrameRate')}")
