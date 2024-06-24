@@ -127,9 +127,9 @@ class IC4Manager(DetectorManager):
     def flushBuffers(self) -> None:
         """ Flushes the detector buffers so that getChunk starts at the last
         frame captured at the time that this function was called. """
-        if self._camera.frame_queue is not None:
+        try:
             self._camera.frame_queue.get_frames()
-        else:
+        except Exception as e:
             pass
 
     def startAcquisition(self, whichAcquisition: str = 'continuous'):
