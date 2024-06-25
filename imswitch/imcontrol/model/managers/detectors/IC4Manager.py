@@ -128,20 +128,14 @@ class IC4Manager(DetectorManager):
         except Exception as e:
             pass
 
-    def startAcquisition(self, whichAcquisition: str = 'continuous'):
+    def startAcquisition(self):
         if not self._running:
-            # self.__logger.debug(f"Starting acquisition: {whichAcquisition}")
-            if whichAcquisition == 'continuous':
-                self._camera.setup_continuous_acquisition()
-            elif whichAcquisition == 'single':
-                self._camera.setup_single_acquisition()
             self._camera.start_acquisition()
             self._running = True
 
     def stopAcquisition(self) -> None:
         """ Stops image acquisition. """
 
-        # self.__logger.debug("Stopping acquisition")
         if self._running:
             self._running = False
             self._camera.stop_acquisition()

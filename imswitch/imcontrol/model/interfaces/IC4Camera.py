@@ -190,6 +190,7 @@ class IC4Camera:
         self.grabber.device_close()
 
     def setup_live_acquisition(self, max_queue_size=10):
+        # NOT USED ATM
         # # self.__logger.debug("Setting up the stream!")
         prop_map = self.grabber.device_property_map
         self.queue_listener = QueueListener_AutoPop(prop_map, self)
@@ -200,6 +201,7 @@ class IC4Camera:
         # self.grabber.stream_setup(queue_sink, setup_option=ic4.StreamSetupOption.DEFER_ACQUISITION_START)
 
     def setup_continuous_acquisition(self, max_queue_size=100):
+        # NOT USED ATM
         # self.__logger.debug("Setting up the stream!")
         prop_map = self.grabber.device_property_map
         self.queue_listener = QueueListener_QueuePop(prop_map, self, max_queue_size)
@@ -211,14 +213,12 @@ class IC4Camera:
         # self.frame_queue.log_status()
         return self.frame_queue.get_latest_and_clear()
 
-    def setup_single_acquisition(self):
-        pass
-
     def start_acquisition(self):
-        # self.__logger.debug("Starting the stream!")
+        prop_map = self.grabber.device_property_map
+        self.queue_listener = QueueListener_QueuePop(prop_map, self, max_queue_size)
+        self.sink = ic4.QueueSink(self.queue_listener, max_output_buffers=30)
         # self.__logger.debug(f"Sink: {self.sink}")
-        # self.__logger.debug(f"Queue_listener: {self.queue_listener}")
-        pass
+        self.grabber.stream_setup(self.sink, setup_option=ic4.StreamSetupOption.ACQUISITION_START)
 
     def stop_acquisition(self):
         # self.__logger.debug("Stopping the stream!")
