@@ -213,7 +213,7 @@ class IC4Camera:
         # self.frame_queue.log_status()
         return self.frame_queue.get_latest_and_clear()
 
-    def start_acquisition(self):
+    def start_acquisition(self, max_queue_size=100):
         prop_map = self.grabber.device_property_map
         self.queue_listener = QueueListener_QueuePop(prop_map, self, max_queue_size)
         self.sink = ic4.QueueSink(self.queue_listener, max_output_buffers=30)
