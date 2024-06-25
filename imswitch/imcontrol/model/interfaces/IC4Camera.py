@@ -8,14 +8,14 @@ from PyQt5.QtWidgets import QApplication, QDialog, QLabel
 ic4.Library.init()
 
 
-class QueueListener(ic4.QueueSinkListener):
+class QueueListener_AutoPop(ic4.QueueSinkListener):
     prop_map: ic4.PropertyMap
 
     def __init__(self, prop_map: ic4.PropertyMap, camera=None):
         self.prop_map = prop_map
 
         self.__logger = initLogger(self, tryInheritParent=True)
-        self.__logger.debug("QueueListener.__init__")
+        self.__logger.debug("QueueListener_AutoPop.__init__")
 
         if camera is not None:
             self.camera = camera
@@ -124,7 +124,6 @@ class IC4Camera:
         dialog = PropertiesDialog()
         ic4.Dialogs.grabber_device_properties(self.grabber, dialog.winId())
         # dialog.exec_()
-
         # sys.exit(app.exec_())
 
     def finalize(self):
@@ -133,10 +132,10 @@ class IC4Camera:
             self.grabber.stream_stop()
         self.grabber.device_close()
 
-    def setup_continuous_acquisition(self, max_queue_size=4):
+    def setup_continuous_acquisition(self, max_queue_size=10):
         self.__logger.debug("Setting up the stream!")
         prop_map = self.grabber.device_property_map
-        self.queue_listener = QueueListener(prop_map, self)
+        self.queue_listener = QueueListener_AutoPop(prop_map, self)
         self.sink = ic4.QueueSink(self.queue_listener, max_output_buffers=max_queue_size)
         self.__logger.debug(f"Sink: {self.sink}")
         self.grabber.stream_setup(self.sink, setup_option=ic4.StreamSetupOption.ACQUISITION_START)
