@@ -110,12 +110,19 @@ class IC4Manager(DetectorManager):
         called, or since the buffers were last flushed (whichever happened
         last). The returned object is a numpy array of shape
         (numFrames, height, width). """
-        pass
+        if self._camera.frame_queue is not None:
+            self._camera.frame_queue.log_status()
+            return self._camera.frame_queue.get_frames()
+        else:
+            return self._camera.get_latest_frame()[np.newaxis, :, :]
 
     def flushBuffers(self) -> None:
         """ Flushes the detector buffers so that getChunk starts at the last
         frame captured at the time that this function was called. """
-        pass
+        if self._camera.frame_queue is not None:
+            self._camera.frame_queue.get_frames()
+        else:
+            pass
 
     def startAcquisition(self, whichAcquisition: str = 'continuous'):
         if not self._running:
