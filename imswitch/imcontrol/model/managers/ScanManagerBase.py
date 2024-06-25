@@ -31,7 +31,7 @@ class SuperScanManager(ABC):
             self._TTLCycleDesigner = None
 
         self._expectedSyncParameters = []
-   
+
     def isValidChild(self):  # For future possible implementation
         return True
 
@@ -74,6 +74,8 @@ class SuperScanManager(ABC):
         self._checkScanDefined()
         parameterDict = copy.deepcopy(self._setupInfo.scan.TTLCycleDesignerParams)
         parameterDict.update(TTLParameters)
+        # with debug logger print the parameterDict
+        self._logger.debug(f'TTL parameters dict: {parameterDict}')
         return self._TTLCycleDesigner.make_signal(parameterDict, self._setupInfo, scanInfoDict)
 
     def _checkScanDefined(self):
@@ -98,7 +100,13 @@ class ScanManagerBase(SuperScanManager):
         self._checkScanDefined()
 
         if not staticPositioner:
+            # scan params dict
+            self._logger.debug(f'Scan parameters: {scanParameters}')
             scanSignalsDict, positions, scanInfoDict = self.getScanSignalsDict(scanParameters)
+            # using the debug logger print the scanSignalsDict
+            self._logger.debug(f'Scan signals dict: {scanSignalsDict}')
+            # using the debug logger print the scanParameters
+            self._logger.debug(f'Scan parameters: {scanParameters}')
             if not self._scanDesigner.checkSignalComp(
                     scanParameters, self._setupInfo, scanInfoDict
             ):
@@ -111,9 +119,11 @@ class ScanManagerBase(SuperScanManager):
             TTLCycleSignalsDict = self.getTTLCycleSignalsDict(TTLParameters, scanInfoDict)
         else:
             TTLCycleSignalsDict = self.getTTLCycleSignalsDict(TTLParameters)
+            # with debug logger print the length of the TTL signals
             scanSignalsDict = {}
             scanInfoDict = {}
 
+        self._logger.debug(f'TTL signals length: {len(TTLCycleSignalsDict)}')
         return (
             {'scanSignalsDict': scanSignalsDict,
              'TTLCycleSignalsDict': TTLCycleSignalsDict},

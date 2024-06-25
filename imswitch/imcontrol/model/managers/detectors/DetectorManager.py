@@ -1,7 +1,7 @@
 import traceback
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -52,10 +52,10 @@ class DetectorNumberParameter(DetectorParameter):
 class DetectorListParameter(DetectorParameter):
     """ A detector parameter with a value from a list of options. """
 
-    value: str
+    value: Union[str, bool, int]
     """ The value of the parameter. """
 
-    options: List[str]
+    options: List[Union[str, bool, int]]
     """ The available values to pick from. """
 
 
@@ -118,6 +118,8 @@ class DetectorManager(SignalInterface):
         except Exception:
             self.__logger.error(traceback.format_exc())
         else:
+            # self.__logger.debug('New frame received')
+            # self.__logger.debug(f'Frame shape: {self.__image.shape}, init: {init}, scale: {self.scale}')
             self.sigImageUpdated.emit(self.__image, init, self.scale)
 
     def setParameter(self, name: str, value: Any) -> Dict[str, DetectorParameter]:

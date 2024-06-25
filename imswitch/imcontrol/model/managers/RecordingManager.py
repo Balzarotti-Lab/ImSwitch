@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 class AsTemporayFile(object):
     """ A temporary file that when exiting the context manager is renamed to its original name. """
+
     def __init__(self, filepath, tmp_extension='.tmp'):
         if os.path.exists(filepath):
             raise FileExistsError(f'File {filepath} already exists.')
@@ -38,6 +39,7 @@ class AsTemporayFile(object):
 
 class Storer(abc.ABC):
     """ Base class for storing data"""
+
     def __init__(self, filepath, detectorManager):
         self.filepath = filepath
         self.detectorManager: DetectorsManager = detectorManager
@@ -46,13 +48,14 @@ class Storer(abc.ABC):
         """ Stores images and attributes according to the spec of the storer """
         raise NotImplementedError
 
-    def stream(self, data = None, **kwargs):
+    def stream(self, data=None, **kwargs):
         """ Stores data in a streaming fashion. """
         raise NotImplementedError
 
 
 class ZarrStorer(Storer):
     """ A storer that stores the images in a zarr file store """
+
     def snap(self, images: Dict[str, np.ndarray], attrs: Dict[str, str] = None):
         with AsTemporayFile(f'{self.filepath}.zarr') as path:
             datasets: List[dict] = []
@@ -62,7 +65,7 @@ class ZarrStorer(Storer):
             for channel, image in images.items():
                 shape = self.detectorManager[channel].shape
                 root.create_dataset(channel, data=image, shape=tuple(reversed(shape)),
-                                        chunks=(512, 512), dtype='i2') #TODO: why not dynamic chunking?
+                                    chunks=(512, 512), dtype='i2')  # TODO: why not dynamic chunking?
 
                 datasets.append({"path": channel, "transformation": None})
             write_multiscales_metadata(root, datasets, format_from_version("0.2"), shape, **attrs)
@@ -71,6 +74,7 @@ class ZarrStorer(Storer):
 
 class HDF5Storer(Storer):
     """ A storer that stores the images in a series of hd5 files """
+
     def snap(self, images: Dict[str, np.ndarray], attrs: Dict[str, str] = None):
         for channel, image in images.items():
             with AsTemporayFile(f'{self.filepath}_{channel}.h5') as path:
@@ -81,7 +85,8 @@ class HDF5Storer(Storer):
                     try:
                         dataset.attrs[key] = value
                     except:
-                        logger.debug(f'Could not put key:value pair {key}:{value} in hdf5 metadata.')
+                        logger.debug(
+                            f'Could not put key:value pair {key}:{value} in hdf5 metadata.')
 
                 dataset.attrs['detector_name'] = channel
 
@@ -95,17 +100,18 @@ class HDF5Storer(Storer):
                     dataset[:, ...] = np.moveaxis(image, [0, 1, 2, 3], [3, 2, 1, 0])
                 else:
                     dataset[:, ...] = np.moveaxis(image, 0, -1)
-            
+
                 file.close()
                 logger.info(f"Saved image to hdf5 file {path}")
-        
+
 
 class TiffStorer(Storer):
     """ A storer that stores the images in a series of tiff files """
+
     def snap(self, images: Dict[str, np.ndarray], attrs: Dict[str, str] = None):
         for channel, image in images.items():
             with AsTemporayFile(f'{self.filepath}_{channel}.tiff') as path:
-                tiff.imwrite(path, image,) # TODO: Parse metadata to tiff meta data
+                tiff.imwrite(path, image,)  # TODO: Parse metadata to tiff meta data
                 logger.info(f"Saved image to tiff file {path}")
 
 
@@ -222,7 +228,8 @@ class RecordingManager(SignalInterface):
 
             # Acquire data
             for detectorName in detectorNames:
-                images[detectorName] = self.__detectorsManager[detectorName].getLatestFrame(is_save=True)
+                images[detectorName] = self.__detectorsManager[detectorName].getLatestFrame(
+                    is_save=True)
                 image = images[detectorName]
 
             if saveFormat:
@@ -236,7 +243,8 @@ class RecordingManager(SignalInterface):
                 if saveMode == SaveMode.RAM or saveMode == SaveMode.DiskAndRAM:
                     for channel, image in images.items():
                         name = os.path.basename(f'{savename}_{channel}')
-                        self.sigMemorySnapAvailable.emit(name, image, savename, saveMode == SaveMode.DiskAndRAM)
+                        self.sigMemorySnapAvailable.emit(
+                            name, image, savename, saveMode == SaveMode.DiskAndRAM)
 
         finally:
             self.__detectorsManager.stopAcquisition(acqHandle)
@@ -260,7 +268,8 @@ class RecordingManager(SignalInterface):
                 try:
                     dataset.attrs[key] = value
                 except:
-                    self.__logger.debug(f'Could not put key:value pair {key}:{value} in hdf5 metadata.')
+                    self.__logger.debug(
+                        f'Could not put key:value pair {key}:{value} in hdf5 metadata.')
 
             dataset.attrs['detector_name'] = detectorName
 
@@ -382,7 +391,8 @@ class RecordingWorker(Worker):
                     = self.__recordingManager.detectorsManager[detectorName].pixelSizeUm
                 datasets[detectorName].attrs['writing'] = True
                 info: List[dict] = [{"path": datasetName, "transformation": None}]
-                write_multiscales_metadata(files[detectorName], info, format_from_version("0.2"), shape, **self.attrs[detectorName])
+                write_multiscales_metadata(files[detectorName], info, format_from_version(
+                    "0.2"), shape, **self.attrs[detectorName])
 
         self.__recordingManager.sigRecordingStarted.emit()
         try:
@@ -454,7 +464,10 @@ class RecordingWorker(Worker):
                 start = time.time()
                 currentRecTime = 0
                 shouldStop = False
+                t_start = time.perf_counter()
                 while True:
+                    self.__logger.debug(f"loop time {time.perf_counter() - t_start}")
+                    t_start = time.perf_counter()
                     for detectorName in self.detectorNames:
                         newFrames = self._getNewFrames(detectorName)
                         n = len(newFrames)
@@ -614,6 +627,8 @@ class RecordingWorker(Worker):
     def _getNewFrames(self, detectorName):
         newFrames = self.__recordingManager.detectorsManager[detectorName].getChunk()
         newFrames = np.array(newFrames)
+        # send debug loggers
+        self.__logger.debug(f"New frames for {detectorName} are {newFrames.shape}")
         return newFrames
 
 

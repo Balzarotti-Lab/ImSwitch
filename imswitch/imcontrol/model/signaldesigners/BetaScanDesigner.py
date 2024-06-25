@@ -63,6 +63,11 @@ class BetaScanDesigner(ScanDesigner):
         slow_axis_positions = 1 if slow_axis_size == 0 or slow_axis_step_size == 0 else \
             1 + int(np.ceil(slow_axis_size / slow_axis_step_size))
 
+        # with debug logger prin position of all the axes
+        self._logger.debug(f'Fast axis positions: {fast_axis_positions}')
+        self._logger.debug(f'Middle axis positions: {middle_axis_positions}')
+        self._logger.debug(f'Slow axis positions: {slow_axis_positions}')
+
         sampleRate = setupInfo.scan.sampleRate
         sequenceSamples = parameterDict['sequence_time'] * sampleRate
         returnSamples = parameterDict['return_time'] * sampleRate

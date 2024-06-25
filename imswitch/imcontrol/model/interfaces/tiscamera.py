@@ -25,7 +25,10 @@ class CameraTIS:
 
         self.roi_filter = self.cam.create_frame_filter('ROI')
         self.cam.add_frame_filter_to_device(self.roi_filter)
-
+        # print all the methods of the self.cam object
+        self.__logger.debug(f'Methods of the object: {dir(self.cam)}')
+        # get the cameras trigger modes and print them
+        # self.__logger.debug(f'Trigger modes: {self.cam.get_trigger_modes()}')
     def start_live(self):
         self.cam.start_live()  # start imaging
 
@@ -41,12 +44,19 @@ class CameraTIS:
     def grabFrame(self):
         # self.cam.wait_til_frame_ready(20)  # wait for frame ready
         frame, width, height, depth = self.cam.get_image_data()
+        # print to the logger the shape
+        # self.__logger.debug(f'Width x height x depth: {width}x{height}x{depth}')
+        # self.__logger.debug(f'Frame shape: {frame.shape}')
         frame = np.array(frame, dtype='float64')
         # Check if below is giving the right dimensions out
         # TODO: do this smarter, as I can just take every 3rd value instead of creating a reshaped
         #       3D array and taking the first plane of that
         frame = np.reshape(frame, (height, width, depth))[:, :, 0]
-        frame = np.transpose(frame)
+        # print shape after reshaping
+        # self.__logger.debug(f'Frame shape after reshaping: {frame.shape}')
+        # frame = np.transpose(frame)
+        # print shape after transposing
+        # self.__logger.debug(f'Frame shape after transposing: {frame.shape}')
         return frame
 
     def setROI(self, hpos, vpos, hsize, vsize):

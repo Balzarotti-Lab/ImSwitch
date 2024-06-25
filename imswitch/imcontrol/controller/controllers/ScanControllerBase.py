@@ -55,11 +55,12 @@ class ScanControllerBase(SuperScanController):
             self.plotSignalGraph()
 
     def runScanAdvanced(self, *, recalculateSignals=True, isNonFinalPartOfSequence=False,
-                        sigScanStartingEmitted):
+                        sigScanStartingEmitted, recording=False):
         """ Runs a scan with the set scanning parameters. """
         try:
             self._widget.setScanButtonChecked(True)
             self.isRunning = True
+            self.recording = recording
 
             if recalculateSignals or self.signalDict is None or self.scanInfoDict is None:
                 self.getParameters()
@@ -77,6 +78,7 @@ class ScanControllerBase(SuperScanController):
 
             if not sigScanStartingEmitted:
                 self.emitScanSignal(self._commChannel.sigScanStarting)
+                self._logger.debug('Scan starting signal emitted.')
             # set positions of scanners not in scan from centerpos
             for index, positionerName in enumerate(self._analogParameterDict['target_device']):
                 if positionerName not in self._positionersScan:
@@ -90,7 +92,16 @@ class ScanControllerBase(SuperScanController):
                 self._commChannel.sigGetReadyForSLMScan.emit()
             else:
                 # run scan
-                self._master.nidaqManager.runScan(self.signalDict, self.scanInfoDict)
+                # in debug log show the length of the signal stored in signalDict
+                # key = list(self.signalDict.keys())[0]
+                # self._logger.debug(f'Length of signalDict: {self.signalDict}')
+                if self.recording:
+                    self._logger.debug('Recording non SLM scan')
+                    #
+                    self._commChannel.sigScanPreparedLetsRecord.emit()
+                    self._master.nidaqManager.runScan(self.signalDict, self.scanInfoDict)
+                else:
+                    self._master.nidaqManager.runScan(self.signalDict, self.scanInfoDict)
         except Exception:
             self._logger.error(traceback.format_exc())
             self.isRunning = False
@@ -98,7 +109,13 @@ class ScanControllerBase(SuperScanController):
     def runSLMScan(self):
         self._logger.debug('Signal to start SLM scan recieved.')
         # run scan
-        self._master.nidaqManager.runScan(self.signalDict, self.scanInfoDict)
+        if self.recording:
+            self._logger.debug('Recording SLM scan')
+            #
+            self._commChannel.sigScanPreparedLetsRecord.emit()
+            self._master.nidaqManager.runScan(self.signalDict, self.scanInfoDict)
+        else:
+            self._master.nidaqManager.runScan(self.signalDict, self.scanInfoDict)
 
     def scanDone(self):
         self.isRunning = False

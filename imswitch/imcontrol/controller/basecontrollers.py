@@ -86,6 +86,7 @@ class SuperScanController(ImConWidgetController):
 
         # Connect CommunicationChannel signals
         self._commChannel.sigRunScan.connect(self.runScanExternal)
+        self._commChannel.sigPrepareScan.connect(self.runScanExternal)
         self._commChannel.sigAbortScan.connect(self.abortScan)
         self._commChannel.sharedAttrs.sigAttributeSet.connect(self.attrChanged)
         self._commChannel.sigToggleBlockScanWidget.connect(lambda block: self.toggleBlockWidget(block))
@@ -117,8 +118,8 @@ class SuperScanController(ImConWidgetController):
         self._widget.setRepeatEnabled(False)
         self.runScanAdvanced(recalculateSignals=recalculateSignals,
                              isNonFinalPartOfSequence=isNonFinalPartOfSequence,
-                             sigScanStartingEmitted=True)
-    
+                             sigScanStartingEmitted=True, recording = True)
+
     @abstractmethod
     def setParameters(self):
         """ Set scan parameters from analog and digital parameter dictionaries. """
@@ -141,7 +142,7 @@ class SuperScanController(ImConWidgetController):
 
     @abstractmethod
     def runScanAdvanced(self, *, recalculateSignals=True, isNonFinalPartOfSequence=False,
-                        sigScanStartingEmitted):
+                        sigScanStartingEmitted, recording=False):
         """ Run a scan with the set scanning parameters. """
         pass
 
@@ -215,7 +216,7 @@ class SuperScanController(ImConWidgetController):
         elif key[0] == _attrCategoryTTL:
             self._digitalParameterDict[key[1]] = value
             self.setParameters()
-            
+
     def toggleBlockWidget(self, block):
         """ Blocks/unblocks scan widget if scans are run from elsewhere. """
         self._widget.setEnabled(block)
@@ -252,7 +253,7 @@ class SuperScanController(ImConWidgetController):
     def runScan(self) -> None:
         """ Runs a scan with the set scanning parameters. """
         self.runScanAdvanced(sigScanStartingEmitted=False)
-        
+
     def sendScanParameters(self):
         self.getParameters()
         self._commChannel.sigSendScanParameters.emit(self._analogParameterDict, self._digitalParameterDict, self._positionersScan)
