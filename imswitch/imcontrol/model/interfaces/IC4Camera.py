@@ -28,20 +28,19 @@ class QueueListener(ic4.QueueSinkListener):
     def frames_queued(self, sink: ic4.QueueSink):
         # self.__logger.debug(64*"=")
         # self.__logger.debug("there are frames in the queue!")
-        # try:
-        #     buffer = sink.pop_output_buffer()
-        #     image = buffer.numpy_wrap()
-        #     self.camera.latest_frame = image
+        try:
+            buffer = sink.pop_output_buffer()
+            image = buffer.numpy_copy()
+            self.camera.latest_frame = image
 
-        # except ic4.IC4Exception as ex:
-        #     self.__logger.error(
-        #         f"Error trying to request ChunkExposuretime: {ex.code} ({ex.message})")
+        except ic4.IC4Exception as ex:
+            self.__logger.error(
+                f"Error trying to request ChunkExposuretime: {ex.code} ({ex.message})")
 
         # finally:
         #     # Disconnecting is not strictly necessary, but will release the buffer for reuse earlier
         #     self.prop_map.connect_chunkdata(None)
         # # self.__logger.debug(64*"=")
-        pass
 
     def sink_disconnected(self, sink: ic4.QueueSink):
         # while there are frames in the queue, pop them
@@ -130,7 +129,7 @@ class IC4Camera:
 
     def finalize(self):
         # check whether cam is streaming
-        if self.grabber.is_streaming():
+        if self.grabber.is_streaming:
             self.grabber.stream_stop()
         self.grabber.device_close()
 
@@ -151,7 +150,7 @@ class IC4Camera:
         # self.__logger.debug(f"{self.get_property(ic4.PropId.EXPOSURE_TIME)=}")
         # self.__logger.debug(f"{self.get_property(ic4.PropId.ACQUISITION_FRAME_RATE)=}")
         # self.__logger.debug(64*"-")
-        self.latest_frame = self.sink.pop_output_buffer().numpy_wrap()
+        # self.latest_frame = self.sink.pop_output_buffer().numpy_wrap()
         # transpose the frame
         frame = np.transpose(self.latest_frame)
         self.__logger.debug(f"Frame shape: {frame.shape}")
