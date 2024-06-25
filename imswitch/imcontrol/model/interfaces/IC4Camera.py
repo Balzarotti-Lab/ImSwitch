@@ -5,6 +5,7 @@ from imswitch.imcommon.model import initLogger
 import sys
 from PyQt5.QtWidgets import QApplication, QDialog, QLabel
 
+from time import time
 ic4.Library.init()
 
 
@@ -27,7 +28,7 @@ class QueueListener_AutoPop(ic4.QueueSinkListener):
 
     def frames_queued(self, sink: ic4.QueueSink):
         # self.__logger.debug(64*"=")
-        # self.__logger.debug("there are frames in the queue!")
+        self.__logger.debug("== there are frames in the queue!")
         try:
             buffer = sink.pop_output_buffer()
             image = buffer.numpy_copy()
@@ -72,7 +73,7 @@ class QueueListener_QueuePop(ic4.QueueSinkListener):
 
     def frames_queued(self, sink: ic4.QueueSink):
         # self.__logger.debug(64*"=")
-        # self.__logger.debug("there are frames in the queue!")
+        self.__logger.debug("== there are frames in the queue!")
         try:
             buffer = sink.pop_output_buffer()
             image = buffer.numpy_copy()[:, :, 0]
@@ -89,6 +90,7 @@ class QueueListener_QueuePop(ic4.QueueSinkListener):
 
     def sink_disconnected(self, sink: ic4.QueueSink):
         # while there are frames in the queue, pop them
+        # self.camera.frame_queue.get_timer_report()
         self.__logger.debug(
             f"There are still {sink.queue_sizes().output_queue_length} frames in the queue.")
         while sink.queue_sizes().output_queue_length > 0:
@@ -144,6 +146,14 @@ class IC4Camera:
                 self.grabber.device_property_map.find(ic4.PropId.TRIGGER_SELECTOR).int_value = 0
             else:
                 self.grabber.device_property_map.find(ic4.PropId.TRIGGER_SELECTOR).int_value = 1
+
+    def set_acq_frame_rate_to_max(self):
+        # get max frame rate
+        max_frame_rate = self.grabber.device_property_map.find(
+            ic4.PropId.ACQUISITION_FRAME_RATE).maximum
+        self.grabber.device_property_map.set_value(
+            ic4.PropId.ACQUISITION_FRAME_RATE, max_frame_rate)
+        self.__logger.debug(f"Max frame rate: {max_frame_rate}")
 
     def openPropertiesGUI(self):
         class PropertiesDialog(QDialog):
@@ -239,6 +249,7 @@ class FrameQueue:
             self.__logger.warning("FrameQueue is full. Overwriting oldest frame.")
 
     def get_frames(self):
+        t_start = time()
         if self.overrun:
             frames = self.__queue
             frames[0:self.__queue_pointer] = self.__queue[self.__max_size - self.__queue_pointer:]
@@ -247,7 +258,8 @@ class FrameQueue:
             frames = self.__queue[:self.__queue_pointer]
         self.__queue_pointer = 0
         self.__queue = np.zeros((self.__max_size, *self.__frame_shape), dtype=np.uint16)
-        return frames[:, :, :]
+        self.__logger.debug(f"Getting frames took {time()-t_start} seconds")
+        return frames
 
     def get_latest(self):
         self.__queue_pointer -= 1

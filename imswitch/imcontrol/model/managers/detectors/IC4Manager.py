@@ -70,8 +70,16 @@ class IC4Manager(DetectorManager):
         if name not in self._DetectorManager__parameters:
             raise AttributeError(f'Non-existent parameter "{name}" specified')
 
-        value = self._camera.set_property(name, value)
-        return value
+        new_value = self._camera.set_property(name, value)
+
+        if name == "TriggerMode":
+            if value == "On":
+                self.last_framerate = self._camera.get_property("AcquisitionFrameRate")
+                self._camera.set_acq_frame_rate_to_max()
+            else:
+                self._camera.set_property("AcquisitionFrameRate", self.last_framerate)
+
+        return new_value
 
     def getParameter(self, name: str):
         """ Get a parameter of the detector. """
