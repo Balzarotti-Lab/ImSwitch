@@ -46,7 +46,7 @@ class QueueListener_AutoPop(ic4.QueueSinkListener):
     def sink_disconnected(self, sink: ic4.QueueSink):
         # while there are frames in the queue, pop them
         # self.__logger.debug(
-            # f"There are still {sink.queue_sizes().output_queue_length} frames in the queue.")
+        # f"There are still {sink.queue_sizes().output_queue_length} frames in the queue.")
         while sink.queue_sizes().output_queue_length > 0:
             sink.pop_output_buffer()
         # self.__logger.debug("==Sink disconnected")
@@ -92,7 +92,7 @@ class QueueListener_QueuePop(ic4.QueueSinkListener):
         # while there are frames in the queue, pop them
         # self.camera.frame_queue.get_timer_report()
         # self.__logger.debug(
-            # f"There are still {sink.queue_sizes().output_queue_length} frames in the queue.")
+        # f"There are still {sink.queue_sizes().output_queue_length} frames in the queue.")
         while sink.queue_sizes().output_queue_length > 0:
             buffer = sink.pop_output_buffer()
             image = buffer.numpy_copy()
@@ -275,7 +275,7 @@ class FrameQueue:
         width = 30  # width of the progress bar
         progress = int(self.__queue_pointer / self.__max_size * width)
         # self.__logger.debug(
-            f"FrameQueue status: [{'='*progress}{' '*(width-progress)}] {self.__queue_pointer}/{self.__max_size}")
+        # f"FrameQueue status: [{'='*progress}{' '*(width-progress)}] {self.__queue_pointer}/{self.__max_size}")
 
     def clear(self):
         self.__queue_pointer = 0

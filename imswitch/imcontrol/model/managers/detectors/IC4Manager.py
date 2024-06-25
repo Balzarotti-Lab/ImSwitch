@@ -17,10 +17,6 @@ class IC4Manager(DetectorManager):
     def __init__(self, detectorInfo, name, **_lowLevelManagers):
         self.__logger = initLogger(self, instanceName=name)
 
-        self.__logger.debug("IC4Manager.__init__")
-        self.__logger.debug(f"detectorInfo: {detectorInfo}")
-        self.__logger.debug(f"serial_no: {detectorInfo.managerProperties['IC4']['serial_no']}")
-
         self._camera = self.getIC4obj(detectorInfo.managerProperties['IC4']['serial_no'])
 
         self._running = False
@@ -28,7 +24,7 @@ class IC4Manager(DetectorManager):
         fullShape = (self._camera.get_property('Width'),
                      self._camera.get_property('Height'))
 
-        self.__logger.debug(f"fullShape: {fullShape}")
+        # self.__logger.debug(f"fullShape: {fullShape}")
 
         self.crop(hpos=0, vpos=0, hsize=fullShape[0], vsize=fullShape[1])
 
@@ -58,12 +54,12 @@ class IC4Manager(DetectorManager):
                          model=self._camera.model, parameters=parameters, actions=actions, croppable=True)
 
         # get the exposure time and AcquisitionFrameRate
-        self.__logger.debug(f"ExposureTime: {self.getParameter('ExposureTime')}")
-        self.__logger.debug(f"AcquisitionFrameRate: {self.getParameter('AcquisitionFrameRate')}")
+        # self.__logger.debug(f"ExposureTime: {self.getParameter('ExposureTime')}")
+        # self.__logger.debug(f"AcquisitionFrameRate: {self.getParameter('AcquisitionFrameRate')}")
 
     def setParameter(self, name: str, value):
         """ Set a parameter of the detector and returns the new value. """
-        self.__logger.debug(f"IC4Manager.setParameter: {name} = {value}")
+        # self.__logger.debug(f"IC4Manager.setParameter: {name} = {value}")
 
         super().setParameter(name, value)
 
@@ -83,7 +79,7 @@ class IC4Manager(DetectorManager):
 
     def getParameter(self, name: str):
         """ Get a parameter of the detector. """
-        self.__logger.debug(f"IC4Manager.getParameter: {name}")
+        # self.__logger.debug(f"IC4Manager.getParameter: {name}")
 
         # if name not in self._DetectorManager__parameters:
         #     raise AttributeError(f'Non-existent parameter "{name}" specified')
@@ -109,7 +105,7 @@ class IC4Manager(DetectorManager):
         """ Returns the frame that represents what the detector currently is
         capturing. The returned object is a numpy array of shape
         (height, width). """
-        self.__logger.debug(f"IC4Manager.getLatestFrame with {self._camera.latest_frame.shape}")
+        # self.__logger.debug(f"IC4Manager.getLatestFrame with {self._camera.latest_frame.shape}")
         if self._running:
             return self._camera.get_latest_frame()
 
@@ -134,7 +130,7 @@ class IC4Manager(DetectorManager):
 
     def startAcquisition(self, whichAcquisition: str = 'continuous'):
         if not self._running:
-            self.__logger.debug(f"Starting acquisition: {whichAcquisition}")
+            # self.__logger.debug(f"Starting acquisition: {whichAcquisition}")
             if whichAcquisition == 'continuous':
                 self._camera.setup_continuous_acquisition()
             elif whichAcquisition == 'single':
@@ -145,7 +141,7 @@ class IC4Manager(DetectorManager):
     def stopAcquisition(self) -> None:
         """ Stops image acquisition. """
 
-        self.__logger.debug("Stopping acquisition")
+        # self.__logger.debug("Stopping acquisition")
         if self._running:
             self._running = False
             self._camera.stop_acquisition()
@@ -163,7 +159,7 @@ class IC4Manager(DetectorManager):
         #     self.__logger.warning(f'Failed to initialize IC4 camera {serialNo}, loading mocker')
         #     from imswitch.imcontrol.model.interfaces.tiscamera_mock import MockCameraTIS
         #     camera = MockCameraTIS()
-        self.__logger.info(f'IC4 camera {camera.model} initialized')
+        self.__logger.info(f'IC4 camera {camera.model} with serial no {serialNo}initialized')
         return camera
 
 
