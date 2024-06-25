@@ -16,19 +16,19 @@ class QueueListener_AutoPop(ic4.QueueSinkListener):
         self.prop_map = prop_map
 
         self.__logger = initLogger(self, tryInheritParent=True)
-        self.__logger.debug("QueueListener_AutoPop.__init__")
+        # self.__logger.debug("QueueListener_AutoPop.__init__")
 
         if camera is not None:
             self.camera = camera
-            self.__logger.debug(f"Camera: {self.camera}")
+            # self.__logger.debug(f"Camera: {self.camera}")
 
     def sink_connected(self, sink: ic4.QueueSink, image_type: ic4.ImageType, min_buffers_required: int) -> bool:
-        self.__logger.debug("calling sink connected")
+        # self.__logger.debug("calling sink connected")
         return True
 
     def frames_queued(self, sink: ic4.QueueSink):
-        # self.__logger.debug(64*"=")
-        self.__logger.debug("== there are frames in the queue!")
+        # # self.__logger.debug(64*"=")
+        # self.__logger.debug("== there are frames in the queue!")
         try:
             buffer = sink.pop_output_buffer()
             image = buffer.numpy_copy()
@@ -45,11 +45,11 @@ class QueueListener_AutoPop(ic4.QueueSinkListener):
 
     def sink_disconnected(self, sink: ic4.QueueSink):
         # while there are frames in the queue, pop them
-        self.__logger.debug(
-            f"There are still {sink.queue_sizes().output_queue_length} frames in the queue.")
+        # self.__logger.debug(
+            # f"There are still {sink.queue_sizes().output_queue_length} frames in the queue.")
         while sink.queue_sizes().output_queue_length > 0:
             sink.pop_output_buffer()
-        self.__logger.debug("==Sink disconnected")
+        # self.__logger.debug("==Sink disconnected")
 
 
 class QueueListener_QueuePop(ic4.QueueSinkListener):
@@ -59,21 +59,21 @@ class QueueListener_QueuePop(ic4.QueueSinkListener):
         self.prop_map = prop_map
 
         self.__logger = initLogger(self, tryInheritParent=True)
-        self.__logger.debug("QueueListener_QueuePop.__init__")
+        # self.__logger.debug("QueueListener_QueuePop.__init__")
 
         if camera is not None:
             self.camera = camera
             self.camera.frame_queue = FrameQueue(
                 (self.camera.height, self.camera.width), max_queue_size)
-            self.__logger.debug(f"Camera: {self.camera}")
+            # self.__logger.debug(f"Camera: {self.camera}")
 
     def sink_connected(self, sink: ic4.QueueSink, image_type: ic4.ImageType, min_buffers_required: int) -> bool:
-        self.__logger.debug("calling sink connected")
+        # self.__logger.debug("calling sink connected")
         return True
 
     def frames_queued(self, sink: ic4.QueueSink):
-        # self.__logger.debug(64*"=")
-        self.__logger.debug("== there are frames in the queue!")
+        # # self.__logger.debug(64*"=")
+        # self.__logger.debug("== there are frames in the queue!")
         try:
             buffer = sink.pop_output_buffer()
             image = buffer.numpy_copy()[:, :, 0]
@@ -91,19 +91,19 @@ class QueueListener_QueuePop(ic4.QueueSinkListener):
     def sink_disconnected(self, sink: ic4.QueueSink):
         # while there are frames in the queue, pop them
         # self.camera.frame_queue.get_timer_report()
-        self.__logger.debug(
-            f"There are still {sink.queue_sizes().output_queue_length} frames in the queue.")
+        # self.__logger.debug(
+            # f"There are still {sink.queue_sizes().output_queue_length} frames in the queue.")
         while sink.queue_sizes().output_queue_length > 0:
             buffer = sink.pop_output_buffer()
             image = buffer.numpy_copy()
             self.camera.frame_queue.add_frame(image)
-        self.__logger.debug("== Sink disconnected")
+        # self.__logger.debug("== Sink disconnected")
 
 
 class IC4Camera:
     def __init__(self, serial_number=None):
         self.__logger = initLogger(self, tryInheritParent=True)
-        self.__logger.debug("IC4camera.__init__")
+        # self.__logger.debug("IC4camera.__init__")
 
         self._get_grabber(serial_number)
 
@@ -128,7 +128,7 @@ class IC4Camera:
     def _get_grabber(self, serial_number):
         self.grabber = ic4.Grabber()
 
-        self.__logger.debug(f"Available devices: {ic4.DeviceEnum.devices()}")
+        # self.__logger.debug(f"Available devices: {ic4.DeviceEnum.devices()}")
 
         for device_info in ic4.DeviceEnum.devices():
             if device_info.serial == serial_number:
@@ -153,7 +153,7 @@ class IC4Camera:
             ic4.PropId.ACQUISITION_FRAME_RATE).maximum
         self.grabber.device_property_map.set_value(
             ic4.PropId.ACQUISITION_FRAME_RATE, max_frame_rate)
-        self.__logger.debug(f"Max frame rate: {max_frame_rate}")
+        # self.__logger.debug(f"Max frame rate: {max_frame_rate}")
 
     def openPropertiesGUI(self):
         class PropertiesDialog(QDialog):
@@ -190,39 +190,40 @@ class IC4Camera:
         self.grabber.device_close()
 
     def setup_live_acquisition(self, max_queue_size=10):
-        self.__logger.debug("Setting up the stream!")
+        # # self.__logger.debug("Setting up the stream!")
         prop_map = self.grabber.device_property_map
         self.queue_listener = QueueListener_AutoPop(prop_map, self)
         self.sink = ic4.QueueSink(self.queue_listener, max_output_buffers=max_queue_size)
-        self.__logger.debug(f"Sink: {self.sink}")
+        # self.__logger.debug(f"Sink: {self.sink}")
         self.grabber.stream_setup(self.sink, setup_option=ic4.StreamSetupOption.ACQUISITION_START)
 
         # self.grabber.stream_setup(queue_sink, setup_option=ic4.StreamSetupOption.DEFER_ACQUISITION_START)
 
     def setup_continuous_acquisition(self, max_queue_size=100):
-        self.__logger.debug("Setting up the stream!")
+        # self.__logger.debug("Setting up the stream!")
         prop_map = self.grabber.device_property_map
         self.queue_listener = QueueListener_QueuePop(prop_map, self, max_queue_size)
         self.sink = ic4.QueueSink(self.queue_listener, max_output_buffers=30)
-        self.__logger.debug(f"Sink: {self.sink}")
+        # self.__logger.debug(f"Sink: {self.sink}")
         self.grabber.stream_setup(self.sink, setup_option=ic4.StreamSetupOption.ACQUISITION_START)
 
     def get_latest_frame(self):
-        self.frame_queue.log_status()
+        # self.frame_queue.log_status()
         return self.frame_queue.get_latest_and_clear()
 
     def setup_single_acquisition(self):
         pass
 
     def start_acquisition(self):
-        self.__logger.debug("Starting the stream!")
-        self.__logger.debug(f"Sink: {self.sink}")
-        self.__logger.debug(f"Queue_listener: {self.queue_listener}")
+        # self.__logger.debug("Starting the stream!")
+        # self.__logger.debug(f"Sink: {self.sink}")
+        # self.__logger.debug(f"Queue_listener: {self.queue_listener}")
+        pass
 
     def stop_acquisition(self):
-        self.__logger.debug("Stopping the stream!")
-        self.__logger.debug(f"Sink: {self.sink}")
-        self.__logger.debug(f"Queue_listener: {self.queue_listener}")
+        # self.__logger.debug("Stopping the stream!")
+        # self.__logger.debug(f"Sink: {self.sink}")
+        # self.__logger.debug(f"Queue_listener: {self.queue_listener}")
         self.grabber.stream_stop()
 
     def get_property(self, property_name):
@@ -258,7 +259,7 @@ class FrameQueue:
             frames = self.__queue[:self.__queue_pointer]
         self.__queue_pointer = 0
         self.__queue = np.zeros((self.__max_size, *self.__frame_shape), dtype=np.uint16)
-        self.__logger.debug(f"Getting frames took {time()-t_start} seconds")
+        # self.__logger.debug(f"Getting frames took {time()-t_start} seconds")
         return frames
 
     def get_latest(self):
@@ -273,7 +274,7 @@ class FrameQueue:
     def log_status(self):
         width = 30  # width of the progress bar
         progress = int(self.__queue_pointer / self.__max_size * width)
-        self.__logger.debug(
+        # self.__logger.debug(
             f"FrameQueue status: [{'='*progress}{' '*(width-progress)}] {self.__queue_pointer}/{self.__max_size}")
 
     def clear(self):
