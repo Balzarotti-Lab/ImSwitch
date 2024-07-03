@@ -64,7 +64,7 @@ class QueueListener_QueuePop(ic4.QueueSinkListener):
         if camera is not None:
             self.camera = camera
             self.camera.frame_queue = FrameQueue(
-                (self.camera.height, self.camera.width), max_queue_size)
+                (self.camera.height, self.camera.width), max_queue_size, self.camera.dtype)
             # self.__logger.debug(f"Camera: {self.camera}")
 
     def sink_connected(self, sink: ic4.QueueSink, image_type: ic4.ImageType, min_buffers_required: int) -> bool:
@@ -111,7 +111,7 @@ class IC4Camera:
         self.grabber.device_property_map.set_value(ic4.PropId.USER_SET_SELECTOR, "Default")
 
         # Configure the device to output images in the Mono16 pixel format
-        self.grabber.device_property_map.set_value(ic4.PropId.PIXEL_FORMAT, ic4.PixelFormat.Mono16)
+        self.grabber.device_property_map.set_value(ic4.PropId.PIXEL_FORMAT, ic4.PixelFormat.Mono8)
 
         # get the width and height of the image
         self.width = self.get_property('Width')
@@ -123,7 +123,10 @@ class IC4Camera:
         # set framerate to 10fps
         self.grabber.device_property_map.set_value(ic4.PropId.ACQUISITION_FRAME_RATE, 10.0)
 
-        self.latest_frame = np.zeros((self.height, self.width), dtype=np.uint16)
+        self.latest_frame = np.zeros((self.height, self.width), dtype=self.dtype)
+
+        self.pixel_formats = {"8bit": ic4.PixelFormat.Mono8,
+                              "16bit": ic4.PixelFormat.Mono16, "12bit": ic4.PixelFormat.Mono12p}
 
     def _get_grabber(self, serial_number):
         self.grabber = ic4.Grabber()
@@ -141,6 +144,16 @@ class IC4Camera:
     def set_property(self, property_name, value):
         if property_name != "TriggerSelector":
             self.grabber.device_property_map.find(property_name).value = value
+        elif property_name == 'pixel_format':
+            try:
+                self.cam.device_property_map.set_value(
+                    ic4.PropId.PIXEL_FORMAT,
+                    self.pixel_formats[property_value],
+                )
+                self.pixel_format = property_value
+                self.__logger.debug(f'pixel format set: {self.pixel_format}')
+            except Exception as e:
+                self.__logger.error(f'Pixel format setting failed: {e}')
         elif property_name == "TriggerSelector":
             if value == "FrameStart":
                 self.grabber.device_property_map.find(ic4.PropId.TRIGGER_SELECTOR).int_value = 0
@@ -231,10 +244,10 @@ class IC4Camera:
 
 
 class FrameQueue:
-    def __init__(self, frame_shape, max_size=100):
+    def __init__(self, frame_shape, max_size=100, dtype=np.uint8):
         self.__frame_shape = frame_shape
         self.__max_size = max_size
-        self.__queue = np.zeros((max_size, *frame_shape), dtype=np.uint16)
+        self.__queue = np.zeros((max_size, *frame_shape), dtype=dtype)
         self.__queue_pointer = 0
         self.overrun = False
 
@@ -258,7 +271,7 @@ class FrameQueue:
         else:
             frames = self.__queue[:self.__queue_pointer]
         self.__queue_pointer = 0
-        self.__queue = np.zeros((self.__max_size, *self.__frame_shape), dtype=np.uint16)
+        self.__queue = np.zeros((self.__max_size, *self.__frame_shape), dtype=dtype)
         # self.__logger.debug(f"Getting frames took {time()-t_start} seconds")
         return frames
 
@@ -279,5 +292,5 @@ class FrameQueue:
 
     def clear(self):
         self.__queue_pointer = 0
-        self.__queue = np.zeros((self.__max_size, *self.__frame_shape), dtype=np.uint16)
+        self.__queue = np.zeros((self.__max_size, *self.__frame_shape), dtype=dtype)
         self.overrun = False

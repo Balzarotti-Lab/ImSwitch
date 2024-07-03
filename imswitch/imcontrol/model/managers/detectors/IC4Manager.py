@@ -38,6 +38,7 @@ class IC4Manager(DetectorManager):
             'TriggerMode': DetectorListParameter(group='Misc', value="Off", options=["On", "Off"], editable=True),
             # 0 for FrameStart, 1 for ExposureActive
             'TriggerSelector': DetectorListParameter(group='Misc', value='ExposureActive', options=['FrameStart', 'ExposureActive'], editable=True),
+            'PixelFormat': DetectorListParameter(group='Misc', value='8bit', options=['8bit', '12bit', '16bit'], editable=True),
         }
 
         # get the pixel size
